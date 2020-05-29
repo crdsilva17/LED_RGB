@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        
+        <title>LED RGB</title>
+        <link href="/st.css" rel="stylesheet"> 
+        
+    </head>
+    <body>
+        <div class="top" id="menu">
+            <h1>LED</h1>
+            <p id="valor"></p>
+        </div>
+        <div class="main" id="page">
+            <div class="sliderconteiner">
+                <input type="range" min="0" max="15"  value="0" class="slider"  id="red" onchange="trocaCor()"> <br>
+                <input type="range" min="0" max="15"  value="0" class="slider" id="green"onchange="trocaCor()"> <br>
+                <input type="range" min="0" max="15"  value="0" class="slider" id="blue" onchange="trocaCor()">
+            </div>
+
+        </div>
+        <div class="footer">
+            <h5>Automa&ccedil;&atilde;o</h5>
+        </div>
+        <script src="/scp.js"></script>
+    </body>
+</html>
