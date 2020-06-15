@@ -3,25 +3,33 @@
     <head>
         
         <title>LED RGB</title>
-        <link href="/st.css" rel="stylesheet"> 
-        
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="st.css" rel="stylesheet"> 
+        <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+        <script src="scp.js"></script>
     </head>
     <body>
         <div class="top" id="menu">
-            <h1>LED</h1>
+            <h3>Aqua Control</h1>
             <p id="valor"></p>
         </div>
-        <div class="main" id="page">
-            <div class="sliderconteiner">
-                <input type="range" min="0" max="15"  value="0" class="slider"  id="red" onchange="trocaCor()"> <br>
-                <input type="range" min="0" max="15"  value="0" class="slider" id="green"onchange="trocaCor()"> <br>
-                <input type="range" min="0" max="15"  value="0" class="slider" id="blue" onchange="trocaCor()">
-            </div>
-
+        <div>
+            <input type="color" id="selector"/>
+        </div>
+        <div id="btn">
+            <label class="text">Bomba<br>
+            <label class="switch">
+                <input type="checkbox" id="pump">
+                <span class="slider round"></span>
+            </label></label><br><br>
+            <label class="text">Alternar<br>
+            <label class="switch">
+                <input type="checkbox" id="auto">
+                <span class="slider round"></span>
+              </label></label>
         </div>
         <div class="footer">
             <h5>Automa&ccedil;&atilde;o</h5>
         </div>
-        <script src="/scp.js"></script>
     </body>
 </html>
