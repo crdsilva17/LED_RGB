@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
     <head>
         
         <title>LED RGB</title>
@@ -10,7 +10,7 @@
     </head>
     <body>
         <div class="top" id="menu">
-            <h3>Aqua Control</h1>
+            <h3><span lang="en">Aqua Control</span></h3>
             <p id="valor"></p>
         </div>
         <div>
@@ -22,14 +22,17 @@
                 <input type="checkbox" id="pump">
                 <span class="slider round"></span>
             </label></label><br><br>
-            <label class="text">Alternar<br>
+            <label class="text">Auto<br>
             <label class="switch">
                 <input type="checkbox" id="auto">
                 <span class="slider round"></span>
-              </label></label>
+              </label></label><br><br>
+              <label class="text">Tempo: 0.1s..................5s<br>
+                <input type="range" id="myRange" min="100" max="5000" value="1000">
+            </label>
         </div>
         <div class="footer">
-            <h5>Automa&ccedil;&atilde;o</h5>
+            <h5>Automa&ccedil;&atilde;o 2020</h5>
         </div>
     </body>
 </html>

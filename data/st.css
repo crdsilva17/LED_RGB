@@ -20,6 +20,9 @@ h5{
   width: 200px;
   margin-left: 70px;
   margin-top: 10px;
+  border: 5px solid;
+  border-radius: 15px;
+  border-color: white;
 }
 
 #btn{
