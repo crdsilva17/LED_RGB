@@ -1,0 +1,484 @@
+.TH "main.cpp" 3 "Sun Jun 21 2020" "Version 1.0" "Aqua Control" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+main.cpp \- Controls pool pump and \fBRGB\fP led\&.  
+
+.SH SYNOPSIS
+.br
+.PP
+\fC#include <Arduino\&.h>\fP
+.br
+\fC#include <ESP8266WiFi\&.h>\fP
+.br
+\fC#include <ESP8266WebServer\&.h>\fP
+.br
+\fC#include <FS\&.h>\fP
+.br
+\fC#include <LittleFS\&.h>\fP
+.br
+\fC#include <ESP8266mDNS\&.h>\fP
+.br
+\fC#include <ESP8266HTTPUpdateServer\&.h>\fP
+.br
+
+.SS "Classes"
+
+.in +1c
+.ti -1c
+.RI "struct \fBRGB\fP"
+.br
+.RI "Struct for Led\&. "
+.in -1c
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "ESP8266WebServer \fBserverA\fP (80)"
+.br
+.ti -1c
+.RI "void \fBhandleRoot\fP ()"
+.br
+.RI "manipulates index\&.htm file "
+.ti -1c
+.RI "void \fBhandleCss\fP ()"
+.br
+.RI "Set stylesheet of page\&. "
+.ti -1c
+.RI "void \fBhandleJs\fP ()"
+.br
+.RI "set script of page "
+.ti -1c
+.RI "void \fBhandleAction\fP ()"
+.br
+.RI "function to do action requested by client "
+.ti -1c
+.RI "void \fBhandleNotFound\fP ()"
+.br
+.RI "handle error page "
+.ti -1c
+.RI "void \fBled\fP (\fBRGB\fP colorname)"
+.br
+.RI "Set color led\&. "
+.ti -1c
+.RI "bool \fBwait\fP ()"
+.br
+.RI "Wait for set time\&. "
+.ti -1c
+.RI "String \fBreadFile\fP (String path)"
+.br
+.RI "Read File\&. "
+.ti -1c
+.RI "void \fBsetup\fP ()"
+.br
+.RI "Setting source\&. "
+.ti -1c
+.RI "void \fBloop\fP ()"
+.br
+.in -1c
+.SS "Variables"
+
+.in +1c
+.ti -1c
+.RI "const char * \fBuser\fP = 'admin'"
+.br
+.ti -1c
+.RI "const char * \fBpass\fP = 'senha123'"
+.br
+.ti -1c
+.RI "const char * \fBhost\fP = 'aqua'"
+.br
+.ti -1c
+.RI "const char * \fBupdate_path\fP = '/firmware'"
+.br
+.ti -1c
+.RI "const char * \fBSSID\fP = 'YOURSSID'"
+.br
+.RI "Ssid Network\&. "
+.ti -1c
+.RI "const char * \fBPASSWD\fP = 'YOURPASSWORD'"
+.br
+.RI "Password for Network\&. "
+.ti -1c
+.RI "bool \fBhand\fP = true"
+.br
+.ti -1c
+.RI "unsigned long \fBsetTime\fP = 1000"
+.br
+.ti -1c
+.RI "unsigned long \fBpreviusTime\fP = 0"
+.br
+.ti -1c
+.RI "File \fBuploadFile\fP"
+.br
+.ti -1c
+.RI "int \fBpinR\fP = 12"
+.br
+.ti -1c
+.RI "int \fBpinG\fP = 13"
+.br
+.ti -1c
+.RI "int \fBpinB\fP = 14"
+.br
+.ti -1c
+.RI "int \fBpump\fP = 5"
+.br
+.RI "define pin of pump "
+.ti -1c
+.RI "int \fBsunLight\fP = 4"
+.br
+.ti -1c
+.RI "String \fBpage\fP = ''"
+.br
+.RI "define ldr sensor "
+.ti -1c
+.RI "ESP8266HTTPUpdateServer \fBhttpUpdater\fP"
+.br
+.RI "INSTANCE FOR HTTP UPDATE\&. "
+.ti -1c
+.RI "\fBRGB\fP \fBcolor\fP = {0,0,0}"
+.br
+.in -1c
+.SH "Detailed Description"
+.PP 
+Controls pool pump and \fBRGB\fP led\&. 
+
+
+.PP
+\fBAuthor\fP
+.RS 4
+Cristiano Rocha 
+.RE
+.PP
+\fBWarning\fP
+.RS 4
+This source is only first implementation 
+.RE
+.PP
+\fBTodo\fP
+.RS 4
+Implementation List
+.IP "\(bu" 2
+Turn on Led
+.IP "\(bu" 2
+OnOff Pump 
+.PP
+.RE
+.PP
+\fBBug\fP
+.RS 4
+Bugs list 
+.RE
+.PP
+\fBCopyright\fP
+.RS 4
+RC Automação all copyrights reserved 
+.RE
+.PP
+
+.PP
+Definition in file \fBmain\&.cpp\fP\&.
+.SH "Function Documentation"
+.PP 
+.SS "void handleAction ()"
+
+.PP
+function to do action requested by client handles customer request
+.PP
+.PP
+.nf
+   turn on led, turn on pump and all actions
+.fi
+.PP
+.PP
+\fBParameters\fP
+.RS 4
+\fI-\fP void 
+.RE
+.PP
+\fBReturns\fP
+.RS 4
+void 
+.RE
+.PP
+On Off Pump
+.PP
+Definition at line 351 of file main\&.cpp\&.
+.SS "void handleCss ()"
+
+.PP
+Set stylesheet of page\&. set style page
+.PP
+.PP
+.nf
+   set style on page with file.css
+.fi
+.PP
+.PP
+\fBParameters\fP
+.RS 4
+\fI-\fP void parameters 
+.RE
+.PP
+\fBReturns\fP
+.RS 4
+void 
+.RE
+.PP
+
+.PP
+Definition at line 330 of file main\&.cpp\&.
+.SS "void handleJs ()"
+
+.PP
+set script of page Javascript source\&.
+.PP
+.PP
+.nf
+   set script on the page whit file.js
+.fi
+.PP
+.PP
+\fBParameters\fP
+.RS 4
+\fI-\fP void parameters 
+.RE
+.PP
+\fBReturns\fP
+.RS 4
+void 
+.RE
+.PP
+
+.PP
+Definition at line 337 of file main\&.cpp\&.
+.SS "void handleNotFound ()"
+
+.PP
+handle error page handle error 404
+.PP
+.PP
+.nf
+   response for request error
+.fi
+.PP
+.PP
+\fBParameters\fP
+.RS 4
+\fI-\fP void 
+.RE
+.PP
+\fBReturns\fP
+.RS 4
+void 
+.RE
+.PP
+
+.PP
+Definition at line 344 of file main\&.cpp\&.
+.SS "void handleRoot ()"
+
+.PP
+manipulates index\&.htm file 
+.PP
+.nf
+   send response a first requisition
+
+.fi
+.PP
+.PP
+\fBParameters\fP
+.RS 4
+\fI-\fP void parameters 
+.RE
+.PP
+\fBReturns\fP
+.RS 4
+void 
+.RE
+.PP
+
+.PP
+Definition at line 323 of file main\&.cpp\&.
+.SS "void led (\fBRGB\fP colorname)"
+
+.PP
+Set color led\&. turn on led in the desired color
+.PP
+.PP
+.nf
+   receive color for turn on led
+.fi
+.PP
+.PP
+\fBParameters\fP
+.RS 4
+\fIcolorname\fP - struct type {r,g,b} 
+.RE
+.PP
+\fBReturns\fP
+.RS 4
+void 
+.RE
+.PP
+
+.PP
+Definition at line 300 of file main\&.cpp\&.
+.SS "void loop ()"
+
+.PP
+Definition at line 258 of file main\&.cpp\&.
+.SS "String readFile (String path)"
+
+.PP
+Read File\&. Read file SPIFFS\&.
+.PP
+.PP
+.nf
+   Open and read all files in the flash system
+.fi
+.PP
+.SS "Variables"
+\fBString\fP \fIcontent\fP ---- //return variable
+.br
+\fBFile\fP \fIfile\fP ---- //add file data
+.PP
+\fBParameters\fP
+.RS 4
+\fIpath\fP - File name 
+.RE
+.PP
+\fBReturns\fP
+.RS 4
+String read from file 
+.RE
+.PP
+
+.PP
+Definition at line 309 of file main\&.cpp\&.
+.SS "ESP8266WebServer \fBserverA\fP (80)"
+
+.SS "setup ()"
+
+.PP
+Setting source\&. 
+.PP
+.nf
+   put all configuration setup of device
+
+.fi
+.PP
+ 
+.PP
+Definition at line 206 of file main\&.cpp\&.
+.SS "bool wait ()"
+
+.PP
+Wait for set time\&. generates delay without locking the code
+.PP
+.PP
+.nf
+     set delay with millis() function
+.fi
+.PP
+.PP
+\fBParameters\fP
+.RS 4
+\fI-\fP void 
+.RE
+.PP
+\fBReturns\fP
+.RS 4
+Boolean type 
+.RE
+.PP
+
+.PP
+Definition at line 287 of file main\&.cpp\&.
+.SH "Variable Documentation"
+.PP 
+.SS "\fBRGB\fP color = {0,0,0}"
+object \fBRGB\fP color 
+.PP
+Definition at line 103 of file main\&.cpp\&.
+.SS "bool hand = true"
+handle manual or automatic action 
+.PP
+Definition at line 43 of file main\&.cpp\&.
+.SS "const char* host = 'aqua'"
+hostname for local access 
+.PP
+Definition at line 39 of file main\&.cpp\&.
+.SS "ESP8266HTTPUpdateServer \fBhttpUpdater\fP"
+
+.PP
+INSTANCE FOR HTTP UPDATE\&. 
+.PP
+Definition at line 68 of file main\&.cpp\&.
+.SS "String page = ''"
+
+.PP
+define ldr sensor Store page HTML 
+.PP
+Definition at line 52 of file main\&.cpp\&.
+.SS "const char* pass = 'senha123'"
+paasword for access 
+.PP
+Definition at line 38 of file main\&.cpp\&.
+.SS "const char* PASSWD = 'YOURPASSWORD'"
+
+.PP
+Password for Network\&. 
+.PP
+Definition at line 42 of file main\&.cpp\&.
+.SS "int pinB = 14"
+Set pin blue as number 14 
+.PP
+Definition at line 49 of file main\&.cpp\&.
+.SS "int pinG = 13"
+Set pin green as number 13 
+.PP
+Definition at line 48 of file main\&.cpp\&.
+.SS "int pinR = 12"
+Set pin red as number 12 
+.PP
+Definition at line 47 of file main\&.cpp\&.
+.SS "unsigned long previusTime = 0"
+receive previus time for trigger delay 
+.PP
+Definition at line 45 of file main\&.cpp\&.
+.SS "int pump = 5"
+
+.PP
+define pin of pump 
+.PP
+Definition at line 50 of file main\&.cpp\&.
+.SS "unsigned long setTime = 1000"
+set time delay 
+.PP
+Definition at line 44 of file main\&.cpp\&.
+.SS "const char* SSID = 'YOURSSID'"
+
+.PP
+Ssid Network\&. 
+.PP
+Definition at line 41 of file main\&.cpp\&.
+.SS "int sunLight = 4"
+
+.PP
+Definition at line 51 of file main\&.cpp\&.
+.SS "const char* update_path = '/firmware'"
+Path for update 
+.PP
+Definition at line 40 of file main\&.cpp\&.
+.SS "File uploadFile"
+Store data for SPIFFS readed 
+.PP
+Definition at line 46 of file main\&.cpp\&.
+.SS "const char* user = 'admin'"
+username for login 
+.PP
+Definition at line 37 of file main\&.cpp\&.
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for Aqua Control from the source code\&.

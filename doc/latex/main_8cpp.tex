@@ -1,0 +1,567 @@
+\hypertarget{main_8cpp}{}\doxysection{main.\+cpp File Reference}
+\label{main_8cpp}\index{main.cpp@{main.cpp}}
+
+
+Controls pool pump and \mbox{\hyperlink{struct_r_g_b}{R\+GB}} led.  
+
+
+{\ttfamily \#include $<$Arduino.\+h$>$}\newline
+{\ttfamily \#include $<$E\+S\+P8266\+Wi\+Fi.\+h$>$}\newline
+{\ttfamily \#include $<$E\+S\+P8266\+Web\+Server.\+h$>$}\newline
+{\ttfamily \#include $<$F\+S.\+h$>$}\newline
+{\ttfamily \#include $<$Little\+F\+S.\+h$>$}\newline
+{\ttfamily \#include $<$E\+S\+P8266m\+D\+N\+S.\+h$>$}\newline
+{\ttfamily \#include $<$E\+S\+P8266\+H\+T\+T\+P\+Update\+Server.\+h$>$}\newline
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_r_g_b}{R\+GB}}
+\begin{DoxyCompactList}\small\item\em Struct for Led. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+E\+S\+P8266\+Web\+Server \mbox{\hyperlink{main_8cpp_ae90ea9ad02e214439f1daad0fabef105}{serverA}} (80)
+\item 
+void \mbox{\hyperlink{main_8cpp_a8427468f39342a1990703e9f5ce7fd29}{handle\+Root}} ()
+\begin{DoxyCompactList}\small\item\em manipulates index.\+htm file \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8cpp_afa0e277896107dd29e37a164ba2e1bf3}{handle\+Css}} ()
+\begin{DoxyCompactList}\small\item\em Set stylesheet of page. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8cpp_a3d64a8c2b61c1988b23de7ecff17a70f}{handle\+Js}} ()
+\begin{DoxyCompactList}\small\item\em set script of page \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8cpp_a3efe3b9eb7768a2f0151f81c77ee8626}{handle\+Action}} ()
+\begin{DoxyCompactList}\small\item\em function to do action requested by client \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8cpp_a54f2b176a577c7a89bb94da4f12cd06b}{handle\+Not\+Found}} ()
+\begin{DoxyCompactList}\small\item\em handle error page \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8cpp_a62224d5046c90fccd4f70583b69fdf55}{led}} (\mbox{\hyperlink{struct_r_g_b}{R\+GB}} colorname)
+\begin{DoxyCompactList}\small\item\em Set color led. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{main_8cpp_ab86f338cf229c8dd15d854493ff43ff6}{wait}} ()
+\begin{DoxyCompactList}\small\item\em Wait for set time. \end{DoxyCompactList}\item 
+String \mbox{\hyperlink{main_8cpp_a831b9c3ce73d7f68679af4256d0a956a}{read\+File}} (String path)
+\begin{DoxyCompactList}\small\item\em Read File. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8cpp_a1d04139db3a5ad5713ecbd14d97da879}{setup}} ()
+\begin{DoxyCompactList}\small\item\em Setting source. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8cpp_afe461d27b9c48d5921c00d521181f12f}{loop}} ()
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+const char $\ast$ \mbox{\hyperlink{main_8cpp_a6b1334b7d911b18440d1fd652de154fe}{user}} = \char`\"{}admin\char`\"{}
+\item 
+const char $\ast$ \mbox{\hyperlink{main_8cpp_a3bef28806edf8f4c8cb82584b7e8c3cb}{pass}} = \char`\"{}senha123\char`\"{}
+\item 
+const char $\ast$ \mbox{\hyperlink{main_8cpp_ae032e164f1daa754d6fbb79d59723931}{host}} = \char`\"{}aqua\char`\"{}
+\item 
+const char $\ast$ \mbox{\hyperlink{main_8cpp_a8737b2bd99a7f8551ef0696fc1a2355f}{update\+\_\+path}} = \char`\"{}/firmware\char`\"{}
+\item 
+const char $\ast$ \mbox{\hyperlink{main_8cpp_a0bd682e71bad5172281d3ac1431d5736}{S\+S\+ID}} = \char`\"{}Y\+O\+U\+R\+S\+S\+ID\char`\"{}
+\begin{DoxyCompactList}\small\item\em Ssid Network. \end{DoxyCompactList}\item 
+const char $\ast$ \mbox{\hyperlink{main_8cpp_acde5d8da5fb0c7ff7949d62f14f5ec73}{P\+A\+S\+S\+WD}} = \char`\"{}Y\+O\+U\+R\+P\+A\+S\+S\+W\+O\+RD\char`\"{}
+\begin{DoxyCompactList}\small\item\em Password for Network. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{main_8cpp_a5600d5a0d6babbd5164611f196f85a1c}{hand}} = true
+\item 
+unsigned long \mbox{\hyperlink{main_8cpp_a7e4065c6980f172d3bb50c3e4fc567a6}{set\+Time}} = 1000
+\item 
+unsigned long \mbox{\hyperlink{main_8cpp_a4e68acd72a09f4d16c684792bf1d5066}{previus\+Time}} = 0
+\item 
+File \mbox{\hyperlink{main_8cpp_a75f9cadda2a3d68252ebfeb55df86618}{upload\+File}}
+\item 
+int \mbox{\hyperlink{main_8cpp_ac502800f01934778b3838560df3fa7b9}{pinR}} = 12
+\item 
+int \mbox{\hyperlink{main_8cpp_aa454e797a064adb746b9d4f92d1a72ae}{pinG}} = 13
+\item 
+int \mbox{\hyperlink{main_8cpp_a055f580da34d1ac642d2c38e77a19459}{pinB}} = 14
+\item 
+int \mbox{\hyperlink{main_8cpp_a21416f9f6745aa8660e0ae570770bc9c}{pump}} = 5
+\begin{DoxyCompactList}\small\item\em define pin of pump \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{main_8cpp_acbd9c8d9e6639b3c684bb4e9e0f7f289}{sun\+Light}} = 4
+\item 
+String \mbox{\hyperlink{main_8cpp_ab6e602ed42dcebe5aef27afe827acb0e}{page}} = \char`\"{}\char`\"{}
+\begin{DoxyCompactList}\small\item\em define ldr sensor \end{DoxyCompactList}\item 
+E\+S\+P8266\+H\+T\+T\+P\+Update\+Server \mbox{\hyperlink{main_8cpp_ac68c34e23fda7d892a1ddd510d779c64}{http\+Updater}}
+\begin{DoxyCompactList}\small\item\em I\+N\+S\+T\+A\+N\+CE F\+OR H\+T\+TP U\+P\+D\+A\+TE. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{struct_r_g_b}{R\+GB}} \mbox{\hyperlink{main_8cpp_a0bbb041790db56f97f4a9fd1cd8a92d0}{color}} = \{0,0,0\}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Controls pool pump and \mbox{\hyperlink{struct_r_g_b}{R\+GB}} led. 
+
+\begin{DoxyAuthor}{Author}
+Cristiano Rocha 
+\end{DoxyAuthor}
+\begin{DoxyWarning}{Warning}
+This source is only first implementation 
+\end{DoxyWarning}
+\begin{DoxyRefDesc}{Todo}
+\item[\mbox{\hyperlink{todo__todo000001}{Todo}}]Implementation List
+\begin{DoxyItemize}
+\item Turn on Led
+\item On\+Off Pump 
+\end{DoxyItemize}\end{DoxyRefDesc}
+\begin{DoxyRefDesc}{Bug}
+\item[\mbox{\hyperlink{bug__bug000001}{Bug}}]Bugs list \end{DoxyRefDesc}
+\begin{DoxyCopyright}{Copyright}
+RC Automação all copyrights reserved 
+\end{DoxyCopyright}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{main_8cpp_a3efe3b9eb7768a2f0151f81c77ee8626}\label{main_8cpp_a3efe3b9eb7768a2f0151f81c77ee8626}} 
+\index{main.cpp@{main.cpp}!handleAction@{handleAction}}
+\index{handleAction@{handleAction}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{handleAction()}{handleAction()}}
+{\footnotesize\ttfamily void handle\+Action (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+function to do action requested by client 
+
+handles customer request
+
+\begin{DoxyVerb}   turn on led, turn on pump and all actions
+\end{DoxyVerb}
+
+
+
+\begin{DoxyParams}{Parameters}
+{\em -\/} & void \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+On Off Pump
+
+Definition at line 351 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_afa0e277896107dd29e37a164ba2e1bf3}\label{main_8cpp_afa0e277896107dd29e37a164ba2e1bf3}} 
+\index{main.cpp@{main.cpp}!handleCss@{handleCss}}
+\index{handleCss@{handleCss}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{handleCss()}{handleCss()}}
+{\footnotesize\ttfamily void handle\+Css (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Set stylesheet of page. 
+
+set style page
+
+\begin{DoxyVerb}   set style on page with file.css
+\end{DoxyVerb}
+
+
+
+\begin{DoxyParams}{Parameters}
+{\em -\/} & void parameters \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+
+
+Definition at line 330 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_a3d64a8c2b61c1988b23de7ecff17a70f}\label{main_8cpp_a3d64a8c2b61c1988b23de7ecff17a70f}} 
+\index{main.cpp@{main.cpp}!handleJs@{handleJs}}
+\index{handleJs@{handleJs}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{handleJs()}{handleJs()}}
+{\footnotesize\ttfamily void handle\+Js (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+set script of page 
+
+Javascript source.
+
+\begin{DoxyVerb}   set script on the page whit file.js
+\end{DoxyVerb}
+
+
+
+\begin{DoxyParams}{Parameters}
+{\em -\/} & void parameters \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+
+
+Definition at line 337 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_a54f2b176a577c7a89bb94da4f12cd06b}\label{main_8cpp_a54f2b176a577c7a89bb94da4f12cd06b}} 
+\index{main.cpp@{main.cpp}!handleNotFound@{handleNotFound}}
+\index{handleNotFound@{handleNotFound}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{handleNotFound()}{handleNotFound()}}
+{\footnotesize\ttfamily void handle\+Not\+Found (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+handle error page 
+
+handle error 404
+
+\begin{DoxyVerb}   response for request error
+\end{DoxyVerb}
+
+
+
+\begin{DoxyParams}{Parameters}
+{\em -\/} & void \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+
+
+Definition at line 344 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_a8427468f39342a1990703e9f5ce7fd29}\label{main_8cpp_a8427468f39342a1990703e9f5ce7fd29}} 
+\index{main.cpp@{main.cpp}!handleRoot@{handleRoot}}
+\index{handleRoot@{handleRoot}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{handleRoot()}{handleRoot()}}
+{\footnotesize\ttfamily void handle\+Root (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+manipulates index.\+htm file 
+
+\begin{DoxyVerb}   send response a first requisition
+\end{DoxyVerb}
+
+
+
+\begin{DoxyParams}{Parameters}
+{\em -\/} & void parameters \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+
+
+Definition at line 323 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_a62224d5046c90fccd4f70583b69fdf55}\label{main_8cpp_a62224d5046c90fccd4f70583b69fdf55}} 
+\index{main.cpp@{main.cpp}!led@{led}}
+\index{led@{led}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{led()}{led()}}
+{\footnotesize\ttfamily void led (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_r_g_b}{R\+GB}}}]{colorname }\end{DoxyParamCaption})}
+
+
+
+Set color led. 
+
+turn on led in the desired color
+
+\begin{DoxyVerb}   receive color for turn on led
+\end{DoxyVerb}
+
+
+
+\begin{DoxyParams}{Parameters}
+{\em colorname} & -\/ struct type \{r,g,b\} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+
+
+Definition at line 300 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_afe461d27b9c48d5921c00d521181f12f}\label{main_8cpp_afe461d27b9c48d5921c00d521181f12f}} 
+\index{main.cpp@{main.cpp}!loop@{loop}}
+\index{loop@{loop}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{loop()}{loop()}}
+{\footnotesize\ttfamily void loop (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Definition at line 258 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_a831b9c3ce73d7f68679af4256d0a956a}\label{main_8cpp_a831b9c3ce73d7f68679af4256d0a956a}} 
+\index{main.cpp@{main.cpp}!readFile@{readFile}}
+\index{readFile@{readFile}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{readFile()}{readFile()}}
+{\footnotesize\ttfamily String read\+File (\begin{DoxyParamCaption}\item[{String}]{path }\end{DoxyParamCaption})}
+
+
+
+Read File. 
+
+Read file S\+P\+I\+F\+FS.
+
+\begin{DoxyVerb}   Open and read all files in the flash system
+\end{DoxyVerb}
+\hypertarget{main_8cpp_autotoc_md0}{}\doxyparagraph{Variables}\label{main_8cpp_autotoc_md0}
+{\bfseries{String}} {\itshape content} -\/--- //return variable~\newline
+{\bfseries{File}} {\itshape file} -\/--- //add file data
+
+
+\begin{DoxyParams}{Parameters}
+{\em path} & -\/ File name \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+String read from file 
+\end{DoxyReturn}
+
+
+Definition at line 309 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_ae90ea9ad02e214439f1daad0fabef105}\label{main_8cpp_ae90ea9ad02e214439f1daad0fabef105}} 
+\index{main.cpp@{main.cpp}!serverA@{serverA}}
+\index{serverA@{serverA}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{serverA()}{serverA()}}
+{\footnotesize\ttfamily E\+S\+P8266\+Web\+Server \mbox{\hyperlink{classserver_a}{serverA}} (\begin{DoxyParamCaption}\item[{80}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{main_8cpp_a1d04139db3a5ad5713ecbd14d97da879}\label{main_8cpp_a1d04139db3a5ad5713ecbd14d97da879}} 
+\index{main.cpp@{main.cpp}!setup@{setup}}
+\index{setup@{setup}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{setup()}{setup()}}
+{\footnotesize\ttfamily setup (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Setting source. 
+
+\begin{DoxyVerb}   put all configuration setup of device
+\end{DoxyVerb}
+ 
+
+Definition at line 206 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_ab86f338cf229c8dd15d854493ff43ff6}\label{main_8cpp_ab86f338cf229c8dd15d854493ff43ff6}} 
+\index{main.cpp@{main.cpp}!wait@{wait}}
+\index{wait@{wait}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{wait()}{wait()}}
+{\footnotesize\ttfamily bool wait (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Wait for set time. 
+
+generates delay without locking the code
+
+\begin{DoxyVerb}     set delay with millis() function
+\end{DoxyVerb}
+
+
+
+\begin{DoxyParams}{Parameters}
+{\em -\/} & void \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Boolean type 
+\end{DoxyReturn}
+
+
+Definition at line 287 of file main.\+cpp.
+
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{main_8cpp_a0bbb041790db56f97f4a9fd1cd8a92d0}\label{main_8cpp_a0bbb041790db56f97f4a9fd1cd8a92d0}} 
+\index{main.cpp@{main.cpp}!color@{color}}
+\index{color@{color}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{color}{color}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_r_g_b}{R\+GB}} color = \{0,0,0\}}
+
+object \mbox{\hyperlink{struct_r_g_b}{R\+GB}} color 
+
+Definition at line 103 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_a5600d5a0d6babbd5164611f196f85a1c}\label{main_8cpp_a5600d5a0d6babbd5164611f196f85a1c}} 
+\index{main.cpp@{main.cpp}!hand@{hand}}
+\index{hand@{hand}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{hand}{hand}}
+{\footnotesize\ttfamily bool hand = true}
+
+handle manual or automatic action 
+
+Definition at line 43 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_ae032e164f1daa754d6fbb79d59723931}\label{main_8cpp_ae032e164f1daa754d6fbb79d59723931}} 
+\index{main.cpp@{main.cpp}!host@{host}}
+\index{host@{host}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{host}{host}}
+{\footnotesize\ttfamily const char$\ast$ host = \char`\"{}aqua\char`\"{}}
+
+hostname for local access 
+
+Definition at line 39 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_ac68c34e23fda7d892a1ddd510d779c64}\label{main_8cpp_ac68c34e23fda7d892a1ddd510d779c64}} 
+\index{main.cpp@{main.cpp}!httpUpdater@{httpUpdater}}
+\index{httpUpdater@{httpUpdater}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{httpUpdater}{httpUpdater}}
+{\footnotesize\ttfamily E\+S\+P8266\+H\+T\+T\+P\+Update\+Server \mbox{\hyperlink{classhttp_updater}{http\+Updater}}}
+
+
+
+I\+N\+S\+T\+A\+N\+CE F\+OR H\+T\+TP U\+P\+D\+A\+TE. 
+
+
+
+Definition at line 68 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_ab6e602ed42dcebe5aef27afe827acb0e}\label{main_8cpp_ab6e602ed42dcebe5aef27afe827acb0e}} 
+\index{main.cpp@{main.cpp}!page@{page}}
+\index{page@{page}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{page}{page}}
+{\footnotesize\ttfamily String page = \char`\"{}\char`\"{}}
+
+
+
+define ldr sensor 
+
+Store page H\+T\+ML 
+
+Definition at line 52 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_a3bef28806edf8f4c8cb82584b7e8c3cb}\label{main_8cpp_a3bef28806edf8f4c8cb82584b7e8c3cb}} 
+\index{main.cpp@{main.cpp}!pass@{pass}}
+\index{pass@{pass}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{pass}{pass}}
+{\footnotesize\ttfamily const char$\ast$ pass = \char`\"{}senha123\char`\"{}}
+
+paasword for access 
+
+Definition at line 38 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_acde5d8da5fb0c7ff7949d62f14f5ec73}\label{main_8cpp_acde5d8da5fb0c7ff7949d62f14f5ec73}} 
+\index{main.cpp@{main.cpp}!PASSWD@{PASSWD}}
+\index{PASSWD@{PASSWD}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{PASSWD}{PASSWD}}
+{\footnotesize\ttfamily const char$\ast$ P\+A\+S\+S\+WD = \char`\"{}Y\+O\+U\+R\+P\+A\+S\+S\+W\+O\+RD\char`\"{}}
+
+
+
+Password for Network. 
+
+
+
+Definition at line 42 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_a055f580da34d1ac642d2c38e77a19459}\label{main_8cpp_a055f580da34d1ac642d2c38e77a19459}} 
+\index{main.cpp@{main.cpp}!pinB@{pinB}}
+\index{pinB@{pinB}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{pinB}{pinB}}
+{\footnotesize\ttfamily int pinB = 14}
+
+Set pin blue as number 14 
+
+Definition at line 49 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_aa454e797a064adb746b9d4f92d1a72ae}\label{main_8cpp_aa454e797a064adb746b9d4f92d1a72ae}} 
+\index{main.cpp@{main.cpp}!pinG@{pinG}}
+\index{pinG@{pinG}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{pinG}{pinG}}
+{\footnotesize\ttfamily int pinG = 13}
+
+Set pin green as number 13 
+
+Definition at line 48 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_ac502800f01934778b3838560df3fa7b9}\label{main_8cpp_ac502800f01934778b3838560df3fa7b9}} 
+\index{main.cpp@{main.cpp}!pinR@{pinR}}
+\index{pinR@{pinR}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{pinR}{pinR}}
+{\footnotesize\ttfamily int pinR = 12}
+
+Set pin red as number 12 
+
+Definition at line 47 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_a4e68acd72a09f4d16c684792bf1d5066}\label{main_8cpp_a4e68acd72a09f4d16c684792bf1d5066}} 
+\index{main.cpp@{main.cpp}!previusTime@{previusTime}}
+\index{previusTime@{previusTime}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{previusTime}{previusTime}}
+{\footnotesize\ttfamily unsigned long previus\+Time = 0}
+
+receive previus time for trigger delay 
+
+Definition at line 45 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_a21416f9f6745aa8660e0ae570770bc9c}\label{main_8cpp_a21416f9f6745aa8660e0ae570770bc9c}} 
+\index{main.cpp@{main.cpp}!pump@{pump}}
+\index{pump@{pump}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{pump}{pump}}
+{\footnotesize\ttfamily int pump = 5}
+
+
+
+define pin of pump 
+
+
+
+Definition at line 50 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_a7e4065c6980f172d3bb50c3e4fc567a6}\label{main_8cpp_a7e4065c6980f172d3bb50c3e4fc567a6}} 
+\index{main.cpp@{main.cpp}!setTime@{setTime}}
+\index{setTime@{setTime}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{setTime}{setTime}}
+{\footnotesize\ttfamily unsigned long set\+Time = 1000}
+
+set time delay 
+
+Definition at line 44 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_a0bd682e71bad5172281d3ac1431d5736}\label{main_8cpp_a0bd682e71bad5172281d3ac1431d5736}} 
+\index{main.cpp@{main.cpp}!SSID@{SSID}}
+\index{SSID@{SSID}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{SSID}{SSID}}
+{\footnotesize\ttfamily const char$\ast$ S\+S\+ID = \char`\"{}Y\+O\+U\+R\+S\+S\+ID\char`\"{}}
+
+
+
+Ssid Network. 
+
+
+
+Definition at line 41 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_acbd9c8d9e6639b3c684bb4e9e0f7f289}\label{main_8cpp_acbd9c8d9e6639b3c684bb4e9e0f7f289}} 
+\index{main.cpp@{main.cpp}!sunLight@{sunLight}}
+\index{sunLight@{sunLight}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{sunLight}{sunLight}}
+{\footnotesize\ttfamily int sun\+Light = 4}
+
+
+
+Definition at line 51 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_a8737b2bd99a7f8551ef0696fc1a2355f}\label{main_8cpp_a8737b2bd99a7f8551ef0696fc1a2355f}} 
+\index{main.cpp@{main.cpp}!update\_path@{update\_path}}
+\index{update\_path@{update\_path}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{update\_path}{update\_path}}
+{\footnotesize\ttfamily const char$\ast$ update\+\_\+path = \char`\"{}/firmware\char`\"{}}
+
+Path for update 
+
+Definition at line 40 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_a75f9cadda2a3d68252ebfeb55df86618}\label{main_8cpp_a75f9cadda2a3d68252ebfeb55df86618}} 
+\index{main.cpp@{main.cpp}!uploadFile@{uploadFile}}
+\index{uploadFile@{uploadFile}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{uploadFile}{uploadFile}}
+{\footnotesize\ttfamily File upload\+File}
+
+Store data for S\+P\+I\+F\+FS readed 
+
+Definition at line 46 of file main.\+cpp.
+
+\mbox{\Hypertarget{main_8cpp_a6b1334b7d911b18440d1fd652de154fe}\label{main_8cpp_a6b1334b7d911b18440d1fd652de154fe}} 
+\index{main.cpp@{main.cpp}!user@{user}}
+\index{user@{user}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{user}{user}}
+{\footnotesize\ttfamily const char$\ast$ user = \char`\"{}admin\char`\"{}}
+
+username for login 
+
+Definition at line 37 of file main.\+cpp.
+
