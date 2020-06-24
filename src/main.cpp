@@ -25,6 +25,8 @@
 #include <LittleFS.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266HTTPUpdateServer.h>
+#include <WiFiUdp.h>
+#include <NTPClient.h>
 
 /******************************************************
  * DEFINES
@@ -43,6 +45,7 @@ const char* PASSWD =  "YOURPASSWORD"; ///< Password for Network
 bool hand = true; /*!< handle manual or automatic action*/
 unsigned long setTime = 1000; /*!< set time delay */
 unsigned long previusTime = 0; /*!< receive previus time for trigger delay */
+unsigned long previusTimes = 0; /*!< receive previus time for trigger delay ntp */
 File uploadFile; /*!< Store data for SPIFFS readed*/
 int pinR = 12; /*!< Set pin red as number 12 */
 int pinG = 13; /*!< Set pin green as number 13 */
@@ -50,6 +53,7 @@ int pinB = 14; /*!< Set pin blue as number 14 */
 int pump = 5; ///< define pin of pump
 int sunLight = 4; /// define ldr sensor
 String page = ""; /*!< Store page HTML */
+String ntpTime = ""; /*!< Store ntp time */
 
 
 /******************************************************************
@@ -79,6 +83,20 @@ String page = ""; /*!< Store page HTML */
  *      - RGB
  **/
   ESP8266WebServer serverA(80); 
+
+/**
+ * @class ntpUDP
+ * @brief create client udp
+ * 
+ * */
+WiFiUDP ntpUDP;
+
+/**
+ * @class ntp
+ * @brief create client ntp
+ * 
+ * */
+NTPClient ntp(ntpUDP,"b.st1.ntp.br", -3 * 3600);
 
 /**
  * @struct RGB 
@@ -176,6 +194,19 @@ void led(RGB colorname);
  * @return Boolean type
  * */
 bool wait();
+
+/**
+ * @fn wait(unsigned long t)
+ * @brief  generates delay without locking the code
+ * 
+ *          set delay with millis() function
+ *          with parameter t
+ * 
+ * @param t - unsigned long
+ * @return void
+ * */
+void wait(unsigned long t);
+
 /**
  * @fn readFile(String path)
  * @brief Read file SPIFFS
@@ -249,6 +280,8 @@ void setup() {
   httpUpdater.setup(&serverA, update_path, user, pass);
   serverA.begin();
 
+  ntp.begin();
+
   MDNS.addService("http", "tcp", 80);
 
 }
@@ -257,7 +290,7 @@ void setup() {
 
 void loop() {
   
-  if(hand != true){
+  if((hand != true) && (digitalRead(sunLight))){
     bool delay = wait();
     led(color);
     if(delay){
@@ -279,6 +312,7 @@ void loop() {
   
   serverA.handleClient();
   MDNS.update();
+  wait(1000L);
 
 }
 /**
@@ -294,6 +328,18 @@ bool wait(){
   }
   
 }
+
+/**
+ * Wait for set time
+ **/
+void wait(unsigned long t){
+  unsigned long currentTime = millis();
+  if((currentTime - previusTimes) >= t){
+    previusTime = currentTime;
+    ntp.update();
+  }
+}
+
 /**
  * Set color led
  * */
