@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['servera_38',['serverA',['../classserver_a.html',1,'']]]
+  ['rgb_43',['RGB',['../struct_r_g_b.html',1,'']]]
 ];

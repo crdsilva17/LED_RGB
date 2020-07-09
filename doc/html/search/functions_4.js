@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['wait_50',['wait',['../main_8cpp.html#ab86f338cf229c8dd15d854493ff43ff6',1,'main.cpp']]]
+  ['servera_53',['serverA',['../main_8cpp.html#ae90ea9ad02e214439f1daad0fabef105',1,'main.cpp']]],
+  ['setup_54',['setup',['../main_8cpp.html#a1d04139db3a5ad5713ecbd14d97da879',1,'main.cpp']]]
 ];

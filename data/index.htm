@@ -5,24 +5,46 @@
         <title>LED RGB</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link href="st.css" rel="stylesheet"> 
-        <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+        <link rel="shortcut icon" href="/favicon.ico" />
         <script src="scp.js"></script>
     </head>
     <body>
         <div class="top" id="menu">
             <h3><span lang="en">Aqua Control</span></h3>
+            <form name="relogio">
+                <input id="relogio" type="text" name="relogio" size="10" readonly="true">
+            </form>
             <p id="valor"></p>
         </div>
         <div>
             <input type="color" id="selector"/>
         </div>
+
+        <div id="bomb" >
         <div id="btn">
-            <label class="text">Bomba<br>
+            <input type="button" class="btn" id="setPump" value="Bomba Manual" onclick="setPump()">
+            <br><br>
+            <label class="text">Bomba Auto<br>
             <label class="switch">
                 <input type="checkbox" id="pump">
                 <span class="slider round"></span>
-            </label></label><br><br>
-            <label class="text">Auto<br>
+            </label></label>
+        </div>
+        <div id="_relogio">
+            <label>Hor&aacute;rio Ligar</label><br>
+            <label><input class="hour" id="set_relog" type="number" min="00" max="23" value="00">
+                :<input class="min" id="set_relog" type="number" min="00" max="59" value="00">
+                :<input class="sec" id="set_relog" type="number" min="00" max="59" value="00"></label> 
+            <br><br><br>
+            <label>Hor&aacute;rio Desligar</label><br>
+            <label><input class="hour1" id="set_relog" type="number" min="00" max="23" value="00">
+                :<input class="min1" id="set_relog" type="number" min="00" max="59" value="00">
+                :<input class="sec1" id="set_relog" type="number" min="00" max="59" value="00"></label>
+        </div>
+        <div>
+        </div><br><br><br>
+           <div id="btn">
+            <label class="text">Led Auto<br>
             <label class="switch">
                 <input type="checkbox" id="auto">
                 <span class="slider round"></span>
@@ -30,6 +52,7 @@
               <label class="text">Tempo: 0.1s..................5s<br>
                 <input type="range" id="myRange" min="100" max="5000" value="1000">
             </label>
+        </div>
         </div>
         <div class="footer">
             <h5>Automa&ccedil;&atilde;o 2020</h5>

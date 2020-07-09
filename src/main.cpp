@@ -40,8 +40,8 @@ const char* user = "admin"; /*!< username for login*/
 const char* pass = "senha123"; /*!< paasword for access*/
 const char* host = "aqua"; /*!< hostname for local access*/
 const char* update_path = "/firmware"; /*!< Path for update*/
-const char* SSID = "YOURSSID"; ///< Ssid Network
-const char* PASSWD =  "YOURPASSWORD"; ///< Password for Network
+const char* SSID = "Virus"; ///< Ssid Network
+const char* PASSWD =  "aoc18090"; ///< Password for Network
 bool hand = true; /*!< handle manual or automatic action*/
 unsigned long setTime = 1000; /*!< set time delay */
 unsigned long previusTime = 0; /*!< receive previus time for trigger delay */
@@ -54,6 +54,8 @@ int pump = 5; ///< define pin of pump
 int sunLight = 4; /// define ldr sensor
 String page = ""; /*!< Store page HTML */
 String ntpTime = ""; /*!< Store ntp time */
+String prog1 = "0";
+String prog2 = "0";
 
 
 /******************************************************************
@@ -125,36 +127,6 @@ RGB color = {0,0,0};/*!< object RGB color */
  * FUNCTIONS
  **********************************************/
 /**
- * @fn handleRoot()
- * @brief manipulates index.htm file
- * 
- *        send response a first requisition
- * 
- * @param  - void parameters
- * @return void
- * */
-void handleRoot();
-/**
- * @fn handleCss()
- * @brief set style page
- * 
- *        set style on page with file.css
- * 
- * @param - void parameters
- * @return void
- * */
-void handleCss();
-/**
- * @fn handleJs()
- * @brief Javascript source
- * 
- *        set script on the page whit file.js
- * 
- * @param - void parameters
- * @return void
- * **/
-void handleJs();
-/**
  * @fn handleAction()
  * @brief handles customer request
  * 
@@ -206,23 +178,29 @@ bool wait();
  * @return void
  * */
 void wait(unsigned long t);
+/**
+ * @fn getContentType(String filename)
+ * @brief Convert the file extension to the MIME type
+ * 
+ *        set of the request type for client 
+ *        .html
+ *        .css
+ *        .js
+ *        .ico
+ * 
+ * @param filename - String
+ * @return String 
+ * */
+String getContentType(String filename); // convert the file extension to the MIME type
 
 /**
- * @fn readFile(String path)
- * @brief Read file SPIFFS
- * 
- *        Open and read all files in the flash system
- * 
- * ###Variables
- * 
- * **String** *content* ---- //return variable\n
- * **File** *file*   ----     //add file data
- * 
- * @param path - File name
- * @return String read from file
- * @var File file
+ * @fn handleFileRead(String path)
+ * @brief Send the right file to client(if it exists)
+ *        
+ *@param path - String
+ *@return bool
  * */
-String readFile(String path);
+bool handleFileRead(String path);       // send the right file to the client (if it exists)
 
 
 /********************************************
@@ -253,27 +231,28 @@ void setup() {
 
   WiFi.mode(WIFI_STA); /* Set device as Station mode */
   WiFi.begin(SSID,PASSWD); /* Try connect to network */
-  Serial.print("Connect ");
+  Serial.print("Connecting ");
   while(WiFi.status() != WL_CONNECTED){
+    Serial.print(".");
     delay(500);
   }
-
+  Serial.println("Connected.");
+  Serial.println(WiFi.localIP().toString());
   serverA.on("/", [](){
     if(!serverA.authenticate(user,pass)){ 
       return serverA.requestAuthentication(); 
     }
-    handleRoot(); 
+    //handleRoot(); 
+        if (!handleFileRead(serverA.uri()))                  // send it if it exists
+      serverA.send(404, "text/plain", "404: Not Found"); // otherwise, respond with a 404 (Not Found) error
   });
-
-  serverA.on("/st.css",handleCss); 
-  serverA.on("/scp.js",handleJs); 
+  
   serverA.on("/update",handleAction); 
-  serverA.on("/favicon.ico",HTTP_GET,[](){
-  page = readFile("/favicon.ico");
-  serverA.send(200,"image/x-icon",page);
-    
-    });
-  serverA.onNotFound(handleNotFound);
+
+  serverA.onNotFound([]() {                              // If the client requests any URI
+    if (!handleFileRead(serverA.uri()))                  // send it if it exists
+      serverA.send(404, "text/plain", "404: Not Found"); // otherwise, respond with a 404 (Not Found) error
+  });
 
   
   MDNS.begin(host);
@@ -310,6 +289,15 @@ void loop() {
     }
     }
   
+  if((prog1 == ntpTime)&&(digitalRead(pump) == LOW)){
+    Serial.println("Pump on");
+    digitalWrite(pump, HIGH);
+  }
+  if((prog2 == ntpTime)&&(digitalRead(pump) == HIGH)){
+    Serial.println("Pump off");
+    digitalWrite(pump, LOW);
+  }
+  
   serverA.handleClient();
   MDNS.update();
   wait(1000L);
@@ -334,9 +322,10 @@ bool wait(){
  **/
 void wait(unsigned long t){
   unsigned long currentTime = millis();
-  if((currentTime - previusTimes) >= t){
+  if((currentTime - previusTimes) > t){
     previusTime = currentTime;
     ntp.update();
+    ntpTime = ntp.getFormattedTime();
   }
 }
 
@@ -347,48 +336,6 @@ void led(RGB colorname){
   analogWrite(pinR,colorname.r);
   analogWrite(pinG,colorname.g);
   analogWrite(pinB,colorname.b);
-}
-
-/**
- * Read File
- * */
-String readFile(String path){ // Function to read all files of system memory
-// creates return variable
-    String content = ""; 
-   if(SPIFFS.begin()){ //begin files class
-    if(SPIFFS.exists(path)){ //verify if file exists
-    File file = SPIFFS.open(path,"r"); //open file in read mode 
-    content = file.readString(); //read open file
-    file.close(); // close file
-    }
-    SPIFFS.end(); //finish files class
-  }
-  return content; // return file data
-}
-
-void handleRoot(){ // call function to principal page
-  page = readFile("/index.htm");
-  serverA.send(200,"text/html",page);
-}
-/**
- * Set stylesheet of page
- * */
-void handleCss(){ // function to creates style of webpage
-  page = readFile("/st.css");
-  serverA.send(200,"text/css",page);
-}
-/**
- * set script of page
- * */
-void handleJs(){ // function to call javascript file
-  page = readFile("/scp.js");
-  serverA.send(200,"text/javascript",page);
-}
-/**
- * handle error page
- * */
-void handleNotFound(){ // function to handle webpage error
-  serverA.send(404,"text/plain","ERROR! Page Not Found!!!");
 }
 
 /**
@@ -409,15 +356,30 @@ void handleAction(){
     analogWrite(pinB,map(serverA.arg(2).toInt(),0,255,0,15)); // enable PWM to blue output
     color.b = map(serverA.arg(2).toInt(),0,255,0,15);
   }
+  String msg = "color{" + (String)color.r + (String)color.g + (String)color.b + "}";
+  Serial.println(msg);
   }
 
   /// On Off Pump
   if(serverA.argName(0).equals("pump")){
     if(serverA.arg(0).equals("on")){
-      digitalWrite(pump,HIGH);
+      //digitalWrite(pump,HIGH);
+    if(serverA.argName(1).equals("prog1")){
+      prog1 = serverA.arg(1);
+    }
+    if(serverA.argName(2).equals("prog2")){
+      prog2 = serverA.arg(2);
+    }
     }else if(serverA.arg(0).equals("off")){
       digitalWrite(pump,LOW);
+      prog1 = "0";
+      prog2 = "0";
     }
+
+    Serial.print("Prog1: ");
+    Serial.println(prog1);
+    Serial.print("Prog2: ");
+    Serial.println(prog2);
   }
 
   if(serverA.argName(0).equals("color")){
@@ -428,6 +390,49 @@ void handleAction(){
       hand = true;
     }
   }
+  if(serverA.argName(1).equals("speed")){
+    setTime = serverA.arg(1).toInt();
+  }
+  if(serverA.argName(0).equals("setPump")){
+    if(serverA.arg(0).equals("set")){
+      if(digitalRead(pump) == true){
+        digitalWrite(pump,LOW);
+        Serial.println("Pump off");
+      }else{
+        digitalWrite(pump,HIGH);
+        Serial.println("Pump on");
+      }
+    }
+  }
+  Serial.print("speed: ");
+  Serial.println((String)setTime);
   serverA.send(200);
+}
+
+String getContentType(String filename) { // convert the file extension to the MIME type
+  if (filename.endsWith(".htm")) return "text/html";
+  else if (filename.endsWith(".css")) return "text/css";
+  else if (filename.endsWith(".js")) return "application/javascript";
+  else if (filename.endsWith(".ico")) return "image/x-icon";
+  return "text/plain";
+}
+
+bool handleFileRead(String path) { // send the right file to the client (if it exists)
+  Serial.println("handleFileRead: " + path);
+  if (path.endsWith("/")) path += "index.htm";         // If a folder is requested, send the index file
+  String contentType = getContentType(path);            // Get the MIME type
+  if(SPIFFS.begin()){
+  if (SPIFFS.exists(path)) {                            // If the file exists
+    File file = SPIFFS.open(path, "r");                 // Open it
+    size_t sent = serverA.streamFile(file, contentType); // And send it to the client
+    file.close(); 
+    SPIFFS.end();                                      // Then close the file again
+    return true;
+  }
+  SPIFFS.end();
+  }
+  Serial.println("\tFile Not Found");
+  Serial.println(path);
+  return false;                                         // If the file doesn't exist, return false
 }
 

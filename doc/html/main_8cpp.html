@@ -112,6 +112,8 @@ $(document).ready(function(){initNavTree('main_8cpp.html',''); initResizable(); 
 <code>#include &lt;LittleFS.h&gt;</code><br />
 <code>#include &lt;ESP8266mDNS.h&gt;</code><br />
 <code>#include &lt;ESP8266HTTPUpdateServer.h&gt;</code><br />
+<code>#include &lt;WiFiUdp.h&gt;</code><br />
+<code>#include &lt;NTPClient.h&gt;</code><br />
 </div>
 <p><a href="main_8cpp_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -125,30 +127,29 @@ Classes</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:ae90ea9ad02e214439f1daad0fabef105"><td class="memItemLeft" align="right" valign="top">ESP8266WebServer&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#ae90ea9ad02e214439f1daad0fabef105">serverA</a> (80)</td></tr>
 <tr class="separator:ae90ea9ad02e214439f1daad0fabef105"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8427468f39342a1990703e9f5ce7fd29"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a8427468f39342a1990703e9f5ce7fd29">handleRoot</a> ()</td></tr>
-<tr class="memdesc:a8427468f39342a1990703e9f5ce7fd29"><td class="mdescLeft">&#160;</td><td class="mdescRight">manipulates index.htm file  <a href="main_8cpp.html#a8427468f39342a1990703e9f5ce7fd29">More...</a><br /></td></tr>
-<tr class="separator:a8427468f39342a1990703e9f5ce7fd29"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afa0e277896107dd29e37a164ba2e1bf3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#afa0e277896107dd29e37a164ba2e1bf3">handleCss</a> ()</td></tr>
-<tr class="memdesc:afa0e277896107dd29e37a164ba2e1bf3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set stylesheet of page.  <a href="main_8cpp.html#afa0e277896107dd29e37a164ba2e1bf3">More...</a><br /></td></tr>
-<tr class="separator:afa0e277896107dd29e37a164ba2e1bf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3d64a8c2b61c1988b23de7ecff17a70f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a3d64a8c2b61c1988b23de7ecff17a70f">handleJs</a> ()</td></tr>
-<tr class="memdesc:a3d64a8c2b61c1988b23de7ecff17a70f"><td class="mdescLeft">&#160;</td><td class="mdescRight">set script of page  <a href="main_8cpp.html#a3d64a8c2b61c1988b23de7ecff17a70f">More...</a><br /></td></tr>
-<tr class="separator:a3d64a8c2b61c1988b23de7ecff17a70f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae861f4e84d32588c72addb44b26b72bd"><td class="memItemLeft" align="right" valign="top">NTPClient&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#ae861f4e84d32588c72addb44b26b72bd">ntp</a> (<a class="el" href="classntp_u_d_p.html">ntpUDP</a>,&quot;b.st1.ntp.br&quot;, -3 *3600)</td></tr>
+<tr class="separator:ae861f4e84d32588c72addb44b26b72bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3efe3b9eb7768a2f0151f81c77ee8626"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a3efe3b9eb7768a2f0151f81c77ee8626">handleAction</a> ()</td></tr>
 <tr class="memdesc:a3efe3b9eb7768a2f0151f81c77ee8626"><td class="mdescLeft">&#160;</td><td class="mdescRight">function to do action requested by client  <a href="main_8cpp.html#a3efe3b9eb7768a2f0151f81c77ee8626">More...</a><br /></td></tr>
 <tr class="separator:a3efe3b9eb7768a2f0151f81c77ee8626"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a54f2b176a577c7a89bb94da4f12cd06b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a54f2b176a577c7a89bb94da4f12cd06b">handleNotFound</a> ()</td></tr>
-<tr class="memdesc:a54f2b176a577c7a89bb94da4f12cd06b"><td class="mdescLeft">&#160;</td><td class="mdescRight">handle error page  <a href="main_8cpp.html#a54f2b176a577c7a89bb94da4f12cd06b">More...</a><br /></td></tr>
-<tr class="separator:a54f2b176a577c7a89bb94da4f12cd06b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c08961ec87f744cdec234cd0c96eef4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a2c08961ec87f744cdec234cd0c96eef4">handleNotFound</a> ()</td></tr>
+<tr class="memdesc:a2c08961ec87f744cdec234cd0c96eef4"><td class="mdescLeft">&#160;</td><td class="mdescRight">handle error 404  <a href="main_8cpp.html#a2c08961ec87f744cdec234cd0c96eef4">More...</a><br /></td></tr>
+<tr class="separator:a2c08961ec87f744cdec234cd0c96eef4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a62224d5046c90fccd4f70583b69fdf55"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a62224d5046c90fccd4f70583b69fdf55">led</a> (<a class="el" href="struct_r_g_b.html">RGB</a> colorname)</td></tr>
 <tr class="memdesc:a62224d5046c90fccd4f70583b69fdf55"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set color led.  <a href="main_8cpp.html#a62224d5046c90fccd4f70583b69fdf55">More...</a><br /></td></tr>
 <tr class="separator:a62224d5046c90fccd4f70583b69fdf55"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab86f338cf229c8dd15d854493ff43ff6"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#ab86f338cf229c8dd15d854493ff43ff6">wait</a> ()</td></tr>
 <tr class="memdesc:ab86f338cf229c8dd15d854493ff43ff6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for set time.  <a href="main_8cpp.html#ab86f338cf229c8dd15d854493ff43ff6">More...</a><br /></td></tr>
 <tr class="separator:ab86f338cf229c8dd15d854493ff43ff6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a831b9c3ce73d7f68679af4256d0a956a"><td class="memItemLeft" align="right" valign="top">String&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a831b9c3ce73d7f68679af4256d0a956a">readFile</a> (String path)</td></tr>
-<tr class="memdesc:a831b9c3ce73d7f68679af4256d0a956a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read File.  <a href="main_8cpp.html#a831b9c3ce73d7f68679af4256d0a956a">More...</a><br /></td></tr>
-<tr class="separator:a831b9c3ce73d7f68679af4256d0a956a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a73db4e51838554013a67adffa560eca1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a73db4e51838554013a67adffa560eca1">wait</a> (unsigned long t)</td></tr>
+<tr class="memdesc:a73db4e51838554013a67adffa560eca1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for set time.  <a href="main_8cpp.html#a73db4e51838554013a67adffa560eca1">More...</a><br /></td></tr>
+<tr class="separator:a73db4e51838554013a67adffa560eca1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac1311527864d9a4219f50d677608e538"><td class="memItemLeft" align="right" valign="top">String&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#ac1311527864d9a4219f50d677608e538">getContentType</a> (String filename)</td></tr>
+<tr class="memdesc:ac1311527864d9a4219f50d677608e538"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert the file extension to the MIME type.  <a href="main_8cpp.html#ac1311527864d9a4219f50d677608e538">More...</a><br /></td></tr>
+<tr class="separator:ac1311527864d9a4219f50d677608e538"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0548bb0730eb6fb24d9d764ec31337c0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a0548bb0730eb6fb24d9d764ec31337c0">handleFileRead</a> (String path)</td></tr>
+<tr class="memdesc:a0548bb0730eb6fb24d9d764ec31337c0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send the right file to client(if it exists)  <a href="main_8cpp.html#a0548bb0730eb6fb24d9d764ec31337c0">More...</a><br /></td></tr>
+<tr class="separator:a0548bb0730eb6fb24d9d764ec31337c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d04139db3a5ad5713ecbd14d97da879"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a1d04139db3a5ad5713ecbd14d97da879">setup</a> ()</td></tr>
 <tr class="memdesc:a1d04139db3a5ad5713ecbd14d97da879"><td class="mdescLeft">&#160;</td><td class="mdescRight">Setting source.  <a href="main_8cpp.html#a1d04139db3a5ad5713ecbd14d97da879">More...</a><br /></td></tr>
 <tr class="separator:a1d04139db3a5ad5713ecbd14d97da879"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -165,10 +166,10 @@ Variables</h2></td></tr>
 <tr class="separator:ae032e164f1daa754d6fbb79d59723931"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8737b2bd99a7f8551ef0696fc1a2355f"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a8737b2bd99a7f8551ef0696fc1a2355f">update_path</a> = &quot;/firmware&quot;</td></tr>
 <tr class="separator:a8737b2bd99a7f8551ef0696fc1a2355f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0bd682e71bad5172281d3ac1431d5736"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a0bd682e71bad5172281d3ac1431d5736">SSID</a> = &quot;YOURSSID&quot;</td></tr>
+<tr class="memitem:a0bd682e71bad5172281d3ac1431d5736"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a0bd682e71bad5172281d3ac1431d5736">SSID</a> = &quot;Virus&quot;</td></tr>
 <tr class="memdesc:a0bd682e71bad5172281d3ac1431d5736"><td class="mdescLeft">&#160;</td><td class="mdescRight">Ssid Network.  <a href="main_8cpp.html#a0bd682e71bad5172281d3ac1431d5736">More...</a><br /></td></tr>
 <tr class="separator:a0bd682e71bad5172281d3ac1431d5736"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acde5d8da5fb0c7ff7949d62f14f5ec73"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#acde5d8da5fb0c7ff7949d62f14f5ec73">PASSWD</a> = &quot;YOURPASSWORD&quot;</td></tr>
+<tr class="memitem:acde5d8da5fb0c7ff7949d62f14f5ec73"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#acde5d8da5fb0c7ff7949d62f14f5ec73">PASSWD</a> = &quot;aoc18090&quot;</td></tr>
 <tr class="memdesc:acde5d8da5fb0c7ff7949d62f14f5ec73"><td class="mdescLeft">&#160;</td><td class="mdescRight">Password for Network.  <a href="main_8cpp.html#acde5d8da5fb0c7ff7949d62f14f5ec73">More...</a><br /></td></tr>
 <tr class="separator:acde5d8da5fb0c7ff7949d62f14f5ec73"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5600d5a0d6babbd5164611f196f85a1c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a5600d5a0d6babbd5164611f196f85a1c">hand</a> = true</td></tr>
@@ -177,6 +178,8 @@ Variables</h2></td></tr>
 <tr class="separator:a7e4065c6980f172d3bb50c3e4fc567a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4e68acd72a09f4d16c684792bf1d5066"><td class="memItemLeft" align="right" valign="top">unsigned long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a4e68acd72a09f4d16c684792bf1d5066">previusTime</a> = 0</td></tr>
 <tr class="separator:a4e68acd72a09f4d16c684792bf1d5066"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d69891eb302127597676d67d39e31f9"><td class="memItemLeft" align="right" valign="top">unsigned long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a9d69891eb302127597676d67d39e31f9">previusTimes</a> = 0</td></tr>
+<tr class="separator:a9d69891eb302127597676d67d39e31f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a75f9cadda2a3d68252ebfeb55df86618"><td class="memItemLeft" align="right" valign="top">File&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a75f9cadda2a3d68252ebfeb55df86618">uploadFile</a></td></tr>
 <tr class="separator:a75f9cadda2a3d68252ebfeb55df86618"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac502800f01934778b3838560df3fa7b9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#ac502800f01934778b3838560df3fa7b9">pinR</a> = 12</td></tr>
@@ -193,9 +196,17 @@ Variables</h2></td></tr>
 <tr class="memitem:ab6e602ed42dcebe5aef27afe827acb0e"><td class="memItemLeft" align="right" valign="top">String&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#ab6e602ed42dcebe5aef27afe827acb0e">page</a> = &quot;&quot;</td></tr>
 <tr class="memdesc:ab6e602ed42dcebe5aef27afe827acb0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">define ldr sensor  <a href="main_8cpp.html#ab6e602ed42dcebe5aef27afe827acb0e">More...</a><br /></td></tr>
 <tr class="separator:ab6e602ed42dcebe5aef27afe827acb0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a69defef8ba88aab988376e79f2dec271"><td class="memItemLeft" align="right" valign="top">String&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a69defef8ba88aab988376e79f2dec271">ntpTime</a> = &quot;&quot;</td></tr>
+<tr class="separator:a69defef8ba88aab988376e79f2dec271"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6dab87f5e81aa11995fab2c723f91a15"><td class="memItemLeft" align="right" valign="top">String&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a6dab87f5e81aa11995fab2c723f91a15">prog1</a> = &quot;0&quot;</td></tr>
+<tr class="separator:a6dab87f5e81aa11995fab2c723f91a15"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a13b2cca57de37af03a29c23209a5baa4"><td class="memItemLeft" align="right" valign="top">String&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a13b2cca57de37af03a29c23209a5baa4">prog2</a> = &quot;0&quot;</td></tr>
+<tr class="separator:a13b2cca57de37af03a29c23209a5baa4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac68c34e23fda7d892a1ddd510d779c64"><td class="memItemLeft" align="right" valign="top">ESP8266HTTPUpdateServer&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#ac68c34e23fda7d892a1ddd510d779c64">httpUpdater</a></td></tr>
 <tr class="memdesc:ac68c34e23fda7d892a1ddd510d779c64"><td class="mdescLeft">&#160;</td><td class="mdescRight">INSTANCE FOR HTTP UPDATE.  <a href="main_8cpp.html#ac68c34e23fda7d892a1ddd510d779c64">More...</a><br /></td></tr>
 <tr class="separator:ac68c34e23fda7d892a1ddd510d779c64"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a22f33e7e05df58bb6145bb6e543e232a"><td class="memItemLeft" align="right" valign="top">WiFiUDP&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a22f33e7e05df58bb6145bb6e543e232a">ntpUDP</a></td></tr>
+<tr class="separator:a22f33e7e05df58bb6145bb6e543e232a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0bbb041790db56f97f4a9fd1cd8a92d0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_r_g_b.html">RGB</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a0bbb041790db56f97f4a9fd1cd8a92d0">color</a> = {0,0,0}</td></tr>
 <tr class="separator:a0bbb041790db56f97f4a9fd1cd8a92d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -213,6 +224,40 @@ Variables</h2></td></tr>
 
 <p class="definition">Definition in file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="ac1311527864d9a4219f50d677608e538"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac1311527864d9a4219f50d677608e538">&#9670;&nbsp;</a></span>getContentType()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">String getContentType </td>
+          <td>(</td>
+          <td class="paramtype">String&#160;</td>
+          <td class="paramname"><em>filename</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Convert the file extension to the MIME type. </p>
+<pre class="fragment">   set of the request type for client 
+   .html
+   .css
+   .js
+   .ico
+</pre><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">filename</td><td>- String </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>String </dd></dl>
+
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00412">412</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+
+</div>
+</div>
 <a id="a3efe3b9eb7768a2f0151f81c77ee8626"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3efe3b9eb7768a2f0151f81c77ee8626">&#9670;&nbsp;</a></span>handleAction()</h2>
 
@@ -240,48 +285,47 @@ Variables</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>void </dd></dl>
 <p>On Off Pump</p>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00351">351</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00344">344</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
-<a id="afa0e277896107dd29e37a164ba2e1bf3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afa0e277896107dd29e37a164ba2e1bf3">&#9670;&nbsp;</a></span>handleCss()</h2>
+<a id="a0548bb0730eb6fb24d9d764ec31337c0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0548bb0730eb6fb24d9d764ec31337c0">&#9670;&nbsp;</a></span>handleFileRead()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void handleCss </td>
+          <td class="memname">bool handleFileRead </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">String&#160;</td>
+          <td class="paramname"><em>path</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Set stylesheet of page. </p>
-<p>set style page</p>
-<pre class="fragment">   set style on page with file.css
-</pre><dl class="params"><dt>Parameters</dt><dd>
+<p>Send the right file to client(if it exists) </p>
+<dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">-</td><td>void parameters </td></tr>
+    <tr><td class="paramname">path</td><td>- String </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>void </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>bool </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00330">330</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00420">420</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
-<a id="a3d64a8c2b61c1988b23de7ecff17a70f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3d64a8c2b61c1988b23de7ecff17a70f">&#9670;&nbsp;</a></span>handleJs()</h2>
+<a id="a2c08961ec87f744cdec234cd0c96eef4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2c08961ec87f744cdec234cd0c96eef4">&#9670;&nbsp;</a></span>handleNotFound()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void handleJs </td>
+          <td class="memname">handleNotFound </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -289,38 +333,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>set script of page </p>
-<p>Javascript source.</p>
-<pre class="fragment">   set script on the page whit file.js
-</pre><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">-</td><td>void parameters </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>void </dd></dl>
-
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00337">337</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
-
-</div>
-</div>
-<a id="a54f2b176a577c7a89bb94da4f12cd06b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a54f2b176a577c7a89bb94da4f12cd06b">&#9670;&nbsp;</a></span>handleNotFound()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void handleNotFound </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>handle error page </p>
-<p>handle error 404</p>
+<p>handle error 404 </p>
 <pre class="fragment">   response for request error
 </pre><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -329,37 +342,6 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void </dd></dl>
-
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00344">344</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
-
-</div>
-</div>
-<a id="a8427468f39342a1990703e9f5ce7fd29"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8427468f39342a1990703e9f5ce7fd29">&#9670;&nbsp;</a></span>handleRoot()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void handleRoot </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>manipulates index.htm file </p>
-<pre class="fragment">   send response a first requisition
-</pre><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">-</td><td>void parameters </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>void </dd></dl>
-
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00323">323</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -390,7 +372,7 @@ Variables</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00300">300</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00335">335</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -409,42 +391,41 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00258">258</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00270">270</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
-<a id="a831b9c3ce73d7f68679af4256d0a956a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a831b9c3ce73d7f68679af4256d0a956a">&#9670;&nbsp;</a></span>readFile()</h2>
+<a id="ae861f4e84d32588c72addb44b26b72bd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae861f4e84d32588c72addb44b26b72bd">&#9670;&nbsp;</a></span>ntp()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">String readFile </td>
+          <td class="memname">NTPClient <a class="el" href="classntp.html">ntp</a> </td>
           <td>(</td>
-          <td class="paramtype">String&#160;</td>
-          <td class="paramname"><em>path</em></td><td>)</td>
+          <td class="paramtype"><a class="el" href="classntp_u_d_p.html">ntpUDP</a>&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">&quot;b.st1.ntp.br&quot;&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">-3 *&#160;</td>
+          <td class="paramname"><em>3600</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read File. </p>
-<p>Read file SPIFFS.</p>
-<pre class="fragment">   Open and read all files in the flash system
-</pre><h3><a class="anchor" id="autotoc_md0"></a>
-Variables</h3>
-<p><b>String</b> <em>content</em> -&mdash; //return variable<br  />
-<b>File</b> <em>file</em> -&mdash; //add file data</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">path</td><td>- File name </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>String read from file </dd></dl>
-
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00309">309</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -484,12 +465,12 @@ Variables</h3>
 <p>Setting source. </p>
 <pre class="fragment">   put all configuration setup of device
 </pre> 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00206">206</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00215">215</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
 <a id="ab86f338cf229c8dd15d854493ff43ff6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab86f338cf229c8dd15d854493ff43ff6">&#9670;&nbsp;</a></span>wait()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ab86f338cf229c8dd15d854493ff43ff6">&#9670;&nbsp;</a></span>wait() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -514,7 +495,39 @@ Variables</h3>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Boolean type </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00287">287</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00309">309</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+
+</div>
+</div>
+<a id="a73db4e51838554013a67adffa560eca1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a73db4e51838554013a67adffa560eca1">&#9670;&nbsp;</a></span>wait() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void wait </td>
+          <td>(</td>
+          <td class="paramtype">unsigned long&#160;</td>
+          <td class="paramname"><em>t</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Wait for set time. </p>
+<p>generates delay without locking the code</p>
+<pre class="fragment">     set delay with millis() function
+     with parameter t
+</pre><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">t</td><td>- unsigned long </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>void </dd></dl>
+
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00323">323</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -532,7 +545,7 @@ Variables</h3>
 </div><div class="memdoc">
 <p>object <a class="el" href="struct_r_g_b.html" title="Struct for Led.">RGB</a> color </p>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00103">103</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00123">123</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -549,7 +562,7 @@ Variables</h3>
 </div><div class="memdoc">
 <p>handle manual or automatic action </p>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00043">43</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00045">45</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -566,7 +579,7 @@ Variables</h3>
 </div><div class="memdoc">
 <p>hostname for local access </p>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00039">39</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00041">41</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -584,7 +597,40 @@ Variables</h3>
 
 <p>INSTANCE FOR HTTP UPDATE. </p>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00068">68</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00074">74</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+
+</div>
+</div>
+<a id="a69defef8ba88aab988376e79f2dec271"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a69defef8ba88aab988376e79f2dec271">&#9670;&nbsp;</a></span>ntpTime</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">String ntpTime = &quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Store ntp time </p>
+
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00056">56</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+
+</div>
+</div>
+<a id="a22f33e7e05df58bb6145bb6e543e232a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a22f33e7e05df58bb6145bb6e543e232a">&#9670;&nbsp;</a></span>ntpUDP</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">WiFiUDP <a class="el" href="classntp_u_d_p.html">ntpUDP</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00094">94</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -603,7 +649,7 @@ Variables</h3>
 <p>define ldr sensor </p>
 <p>Store page HTML </p>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00052">52</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00055">55</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -620,7 +666,7 @@ Variables</h3>
 </div><div class="memdoc">
 <p>paasword for access </p>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00038">38</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00040">40</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -631,14 +677,14 @@ Variables</h3>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const char* PASSWD = &quot;YOURPASSWORD&quot;</td>
+          <td class="memname">const char* PASSWD = &quot;aoc18090&quot;</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Password for Network. </p>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00042">42</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00044">44</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -655,7 +701,7 @@ Variables</h3>
 </div><div class="memdoc">
 <p>Set pin blue as number 14 </p>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00049">49</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00052">52</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -672,7 +718,7 @@ Variables</h3>
 </div><div class="memdoc">
 <p>Set pin green as number 13 </p>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00048">48</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00051">51</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -689,7 +735,7 @@ Variables</h3>
 </div><div class="memdoc">
 <p>Set pin red as number 12 </p>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00047">47</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00050">50</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -706,7 +752,56 @@ Variables</h3>
 </div><div class="memdoc">
 <p>receive previus time for trigger delay </p>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00045">45</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00047">47</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+
+</div>
+</div>
+<a id="a9d69891eb302127597676d67d39e31f9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9d69891eb302127597676d67d39e31f9">&#9670;&nbsp;</a></span>previusTimes</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned long previusTimes = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>receive previus time for trigger delay ntp </p>
+
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00048">48</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+
+</div>
+</div>
+<a id="a6dab87f5e81aa11995fab2c723f91a15"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6dab87f5e81aa11995fab2c723f91a15">&#9670;&nbsp;</a></span>prog1</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">String prog1 = &quot;0&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00057">57</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+
+</div>
+</div>
+<a id="a13b2cca57de37af03a29c23209a5baa4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a13b2cca57de37af03a29c23209a5baa4">&#9670;&nbsp;</a></span>prog2</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">String prog2 = &quot;0&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00058">58</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -724,7 +819,7 @@ Variables</h3>
 
 <p>define pin of pump </p>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00050">50</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00053">53</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -741,7 +836,7 @@ Variables</h3>
 </div><div class="memdoc">
 <p>set time delay </p>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00044">44</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00046">46</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -752,14 +847,14 @@ Variables</h3>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const char* SSID = &quot;YOURSSID&quot;</td>
+          <td class="memname">const char* SSID = &quot;Virus&quot;</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Ssid Network. </p>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00041">41</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00043">43</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -775,7 +870,7 @@ Variables</h3>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00051">51</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00054">54</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -792,7 +887,7 @@ Variables</h3>
 </div><div class="memdoc">
 <p>Path for update </p>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00040">40</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00042">42</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -809,7 +904,7 @@ Variables</h3>
 </div><div class="memdoc">
 <p>Store data for SPIFFS readed </p>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00046">46</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00049">49</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>
@@ -826,7 +921,7 @@ Variables</h3>
 </div><div class="memdoc">
 <p>username for login </p>
 
-<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00037">37</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="main_8cpp_source.html#l00039">39</a> of file <a class="el" href="main_8cpp_source.html">main.cpp</a>.</p>
 
 </div>
 </div>

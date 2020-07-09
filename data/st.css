@@ -25,11 +25,46 @@ h5{
   border-color: white;
 }
 
+#relogio{
+ 
+    background-color: black;
+    color: white;
+    font-family: Verdana, Arial,Helvetica;
+    font-size: 8px;
+    margin-right: 10px;
+    border-style: none;
+    border-radius: 15px;
+    text-align: center;
+    float: right;
+
+}
+
+#bomb{
+  display: block;
+}
+
+#_relogio{
+  float: right;
+  margin-right: 10px;
+}
+#set_relog{
+  width: 30px;
+}
+
+
 #btn{
   height: 50px;
-  width: 60px;
+  width: 110px;
   margin-top: 40px;
   margin-left: 40px;
+}
+
+.btn{
+  height: 50px;
+  width: 70px;
+  white-space: normal;
+  word-wrap: break-word;
+  border-radius: 20px;
 }
 
 .top{
