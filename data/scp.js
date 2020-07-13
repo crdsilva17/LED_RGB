@@ -86,6 +86,7 @@ document.querySelector("#auto").addEventListener("change",function(envent){
     }
 });
 moveClock();
+updateValue();
 
 document.querySelector(".hour").addEventListener("change",set_hour);
 document.querySelector(".min").addEventListener("change",set_min);
@@ -95,6 +96,92 @@ document.querySelector(".min1").addEventListener("change",set_min);
 document.querySelector(".sec1").addEventListener("change",set_sec);
 
 }
+
+function updateValue(){
+    setTimeout(updateValue,60000);
+    var xhjson = new XMLHttpRequest();
+    xhjson.open("POST","/update",true);
+    xhjson.onreadystatechange = function (){
+    if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+            // Requisição finalizada. Faça o processamento aqui.
+            var response = JSON.parse(xhjson.responseText);
+            var ledAuto = response.led;
+            var pumpAuto = response.pump;
+            var red = parseInt(response.red);
+            var green = parseInt(response.green);
+            var blue = parseInt(response.blue);
+            var pro1 = response.prog1;
+            var pro2 = response.prog2;
+            var range = response.range;
+
+            var auto = document.querySelector("#auto");
+            var selector = document.querySelector("#selector");  
+            var speed = document.querySelector("#myRange");
+            var pump = document.querySelector("#pump");
+            console.log(pro1);
+            console.log(pro2);
+
+            var time1 = pro1.split(":");
+            var time2 = pro2.split(":");
+
+        var cor = "#";
+        if(red < 10){
+            cor += "0" + red;
+        }else{
+            cor += red.toString(16);
+        }
+        if(green < 10){
+            cor += "0" + green;
+        }else{
+            cor +=  green.toString(16);
+        }
+        if(blue < 10){
+            cor += "0" + blue;
+        }else{
+            cor += blue.toString(16);
+        }
+        selector.value = cor;
+        speed.value = range;
+        console.log(red);
+        if(pumpAuto == true){
+        pump.checked = true;
+        }else{
+            pump.checked = false;
+        }
+
+        document.querySelector(".hour").value = time1[0];
+        document.querySelector(".min").value = time1[1];
+        document.querySelector(".sec").value = time1[2];
+
+        document.querySelector(".hour1").value = time2[0];
+        document.querySelector(".min1").value = time2[1];
+        document.querySelector(".sec1").value = time2[2];
+        
+        if(pump.checked){
+            document.querySelector("#setPump").disabled = true;
+        }else{
+            document.querySelector("#setPump").disabled = false;
+        }
+
+        if(ledAuto == true){
+        auto.checked = false;
+         }else{
+        auto.checked = true;
+         }
+          if (auto.checked) {
+        selector.disabled = true;
+          }else{
+        selector.disabled = false;
+          }
+    }       
+
+    }
+    var form = new FormData();
+    form.append("update","1");
+    xhjson.send(form);
+}
+
+
 function moveClock(){
     dateNow = new Date();
     hora = dateNow.getHours();

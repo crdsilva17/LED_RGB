@@ -43,6 +43,7 @@ const char* update_path = "/firmware"; /*!< Path for update*/
 const char* SSID = "Virus"; ///< Ssid Network
 const char* PASSWD =  "aoc18090"; ///< Password for Network
 bool hand = true; /*!< handle manual or automatic action*/
+bool pumpAuto = false; /*!< store status pump auto*/
 unsigned long setTime = 1000; /*!< set time delay */
 unsigned long previusTime = 0; /*!< receive previus time for trigger delay */
 unsigned long previusTimes = 0; /*!< receive previus time for trigger delay ntp */
@@ -54,8 +55,8 @@ int pump = 5; ///< define pin of pump
 int sunLight = 4; /// define ldr sensor
 String page = ""; /*!< Store page HTML */
 String ntpTime = ""; /*!< Store ntp time */
-String prog1 = "0";
-String prog2 = "0";
+String prog1 = "00:00:00";
+String prog2 = "00:00:00";
 
 
 /******************************************************************
@@ -177,7 +178,7 @@ bool wait();
  * @param t - unsigned long
  * @return void
  * */
-void wait(unsigned long t);
+void wait1(unsigned long t);
 /**
  * @fn getContentType(String filename)
  * @brief Convert the file extension to the MIME type
@@ -288,7 +289,7 @@ void loop() {
       }
     }
     }
-  
+  if(pumpAuto == true){
   if((prog1 == ntpTime)&&(digitalRead(pump) == LOW)){
     Serial.println("Pump on");
     digitalWrite(pump, HIGH);
@@ -297,10 +298,11 @@ void loop() {
     Serial.println("Pump off");
     digitalWrite(pump, LOW);
   }
+  }
   
   serverA.handleClient();
   MDNS.update();
-  wait(1000L);
+  wait1(1000L);
 
 }
 /**
@@ -320,10 +322,10 @@ bool wait(){
 /**
  * Wait for set time
  **/
-void wait(unsigned long t){
+void wait1(unsigned long t){
   unsigned long currentTime = millis();
   if((currentTime - previusTimes) > t){
-    previusTime = currentTime;
+    previusTimes = currentTime;
     ntp.update();
     ntpTime = ntp.getFormattedTime();
   }
@@ -342,6 +344,35 @@ void led(RGB colorname){
  * function to do action requested by client
  * */
 void handleAction(){
+
+  if(serverA.argName(0).equals("update")){
+    String json;
+    json.reserve(128);
+    json = "{\"led\":";
+    if(hand){
+    json += "\"1\"";
+    }else{
+    json += "\"0\"";
+    }
+    json += ", \"pump\":\"";
+    json += pumpAuto;
+    json += "\", \"red\":\"";
+    json += map(color.r,0,15,0,255);
+    json += "\", \"green\":\"";
+    json += map(color.g,0,15,0,255);
+    json += "\", \"blue\":\"";
+    json += map(color.b,0,15,0,255);
+    json += "\", \"prog1\":\"";
+    json += prog1;
+    json += "\", \"prog2\":\"";
+    json += prog2;
+    json += "\", \"range\":\"";
+    json += setTime;
+    json += "\"}";
+
+    serverA.send(200,"application/json", json);
+    
+  }
 
   if(hand){
   if(serverA.argName(0).equals("R")){
@@ -364,6 +395,7 @@ void handleAction(){
   if(serverA.argName(0).equals("pump")){
     if(serverA.arg(0).equals("on")){
       //digitalWrite(pump,HIGH);
+      pumpAuto = true;
     if(serverA.argName(1).equals("prog1")){
       prog1 = serverA.arg(1);
     }
@@ -372,8 +404,13 @@ void handleAction(){
     }
     }else if(serverA.arg(0).equals("off")){
       digitalWrite(pump,LOW);
-      prog1 = "0";
-      prog2 = "0";
+      pumpAuto = false;
+    if(serverA.argName(1).equals("prog1")){
+      prog1 = serverA.arg(1);
+    }
+    if(serverA.argName(2).equals("prog2")){
+      prog2 = serverA.arg(2);
+    }
     }
 
     Serial.print("Prog1: ");
