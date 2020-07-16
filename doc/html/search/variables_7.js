@@ -1,6 +1,4 @@
 var searchData=
 [
-  ['settime_76',['setTime',['../main_8cpp.html#a7e4065c6980f172d3bb50c3e4fc567a6',1,'main.cpp']]],
-  ['ssid_77',['SSID',['../main_8cpp.html#a0bd682e71bad5172281d3ac1431d5736',1,'main.cpp']]],
-  ['sunlight_78',['sunLight',['../main_8cpp.html#acbd9c8d9e6639b3c684bb4e9e0f7f289',1,'main.cpp']]]
+  ['r_99',['r',['../struct_r_g_b.html#a4d3c2175c0716cfa7784e4f579e7ad8d',1,'RGB']]]
 ];

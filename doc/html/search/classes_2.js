@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['rgb_43',['RGB',['../struct_r_g_b.html',1,'']]]
+  ['ntp_54',['ntp',['../classntp.html',1,'']]],
+  ['ntpudp_55',['ntpUDP',['../classntp_u_d_p.html',1,'']]]
 ];

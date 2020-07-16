@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['g_58',['g',['../struct_r_g_b.html#a41f27eaa5f606b1b5a345173bed33f6f',1,'RGB']]]
+  ['filename_81',['filename',['../main_8cpp.html#a7efa5e9c7494c7d4586359300221aa5d',1,'main.cpp']]]
 ];

@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['update_5fpath_79',['update_path',['../main_8cpp.html#a8737b2bd99a7f8551ef0696fc1a2355f',1,'main.cpp']]],
-  ['uploadfile_80',['uploadFile',['../main_8cpp.html#a75f9cadda2a3d68252ebfeb55df86618',1,'main.cpp']]],
-  ['user_81',['user',['../main_8cpp.html#a6b1334b7d911b18440d1fd652de154fe',1,'main.cpp']]]
+  ['settime_100',['setTime',['../main_8cpp.html#a7e4065c6980f172d3bb50c3e4fc567a6',1,'main.cpp']]],
+  ['shouldsave_101',['shouldSave',['../main_8cpp.html#a5b2105a285d12dbe89e9384d2351e1a9',1,'main.cpp']]],
+  ['sunlight_102',['sunLight',['../main_8cpp.html#acbd9c8d9e6639b3c684bb4e9e0f7f289',1,'main.cpp']]]
 ];

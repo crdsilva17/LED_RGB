@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['httpupdater_40',['httpUpdater',['../classhttp_updater.html',1,'']]]
+  ['config_52',['Config',['../struct_config.html',1,'']]]
 ];

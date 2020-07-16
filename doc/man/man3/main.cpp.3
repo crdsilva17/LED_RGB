@@ -1,8 +1,8 @@
-.TH "main.cpp" 3 "Thu Jul 9 2020" "Version 1.0" "Aqua Control" \" -*- nroff -*-
+.TH "C:/Users/crist/OneDrive/Documentos/PlatformIO/Projects/LED_RGB/LED_RGB/src/main.cpp" 3 "Thu Jul 16 2020" "Version 1.0" "Aqua Control" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
-main.cpp \- Controls pool pump and \fBRGB\fP led\&.  
+C:/Users/crist/OneDrive/Documentos/PlatformIO/Projects/LED_RGB/LED_RGB/src/main.cpp \- Controls pool pump and \fBRGB\fP led\&.  
 
 .SH SYNOPSIS
 .br
@@ -25,6 +25,10 @@ main.cpp \- Controls pool pump and \fBRGB\fP led\&.
 .br
 \fC#include <NTPClient\&.h>\fP
 .br
+\fC#include <WiFiManager\&.h>\fP
+.br
+\fC#include <ArduinoJson\&.h>\fP
+.br
 
 .SS "Classes"
 
@@ -33,6 +37,10 @@ main.cpp \- Controls pool pump and \fBRGB\fP led\&.
 .RI "struct \fBRGB\fP"
 .br
 .RI "Struct for Led\&. "
+.ti -1c
+.RI "struct \fBConfig\fP"
+.br
+.RI "Struct for setting\&. "
 .in -1c
 .SS "Functions"
 
@@ -48,6 +56,18 @@ main.cpp \- Controls pool pump and \fBRGB\fP led\&.
 .br
 .RI "function to do action requested by client "
 .ti -1c
+.RI "void \fBloadConfigurator\fP (const char *\fBfilename\fP, \fBConfig\fP &\fBconfig\fP)"
+.br
+.RI "read config file "
+.ti -1c
+.RI "void \fBsaveCallbackConfig\fP ()"
+.br
+.RI "set flag save config "
+.ti -1c
+.RI "void \fBsaveConfig\fP (const char *\fBfilename\fP, \fBConfig\fP &\fBconfig\fP)"
+.br
+.RI "read config file "
+.ti -1c
 .RI "void \fBhandleNotFound\fP ()"
 .br
 .RI "handle error 404 "
@@ -60,11 +80,11 @@ main.cpp \- Controls pool pump and \fBRGB\fP led\&.
 .br
 .RI "Wait for set time\&. "
 .ti -1c
-.RI "void \fBwait\fP (unsigned long t)"
+.RI "void \fBwait1\fP (unsigned long t)"
 .br
 .RI "Wait for set time\&. "
 .ti -1c
-.RI "String \fBgetContentType\fP (String filename)"
+.RI "String \fBgetContentType\fP (String \fBfilename\fP)"
 .br
 .RI "Convert the file extension to the MIME type\&. "
 .ti -1c
@@ -83,27 +103,19 @@ main.cpp \- Controls pool pump and \fBRGB\fP led\&.
 
 .in +1c
 .ti -1c
-.RI "const char * \fBuser\fP = 'admin'"
-.br
-.ti -1c
-.RI "const char * \fBpass\fP = 'senha123'"
-.br
-.ti -1c
-.RI "const char * \fBhost\fP = 'aqua'"
-.br
-.ti -1c
 .RI "const char * \fBupdate_path\fP = '/firmware'"
 .br
 .ti -1c
-.RI "const char * \fBSSID\fP = 'Virus'"
+.RI "const char * \fBfilename\fP = '/config\&.txt'"
 .br
-.RI "Ssid Network\&. "
-.ti -1c
-.RI "const char * \fBPASSWD\fP = 'aoc18090'"
-.br
-.RI "Password for Network\&. "
 .ti -1c
 .RI "bool \fBhand\fP = true"
+.br
+.ti -1c
+.RI "bool \fBpumpAuto\fP = false"
+.br
+.ti -1c
+.RI "bool \fBshouldSave\fP = false"
 .br
 .ti -1c
 .RI "unsigned long \fBsetTime\fP = 1000"
@@ -141,17 +153,23 @@ main.cpp \- Controls pool pump and \fBRGB\fP led\&.
 .RI "String \fBntpTime\fP = ''"
 .br
 .ti -1c
-.RI "String \fBprog1\fP = '0'"
+.RI "String \fBprog1\fP = '00:00:00'"
 .br
 .ti -1c
-.RI "String \fBprog2\fP = '0'"
+.RI "String \fBprog2\fP = '00:00:00'"
 .br
 .ti -1c
 .RI "ESP8266HTTPUpdateServer \fBhttpUpdater\fP"
 .br
 .RI "INSTANCE FOR HTTP UPDATE\&. "
 .ti -1c
+.RI "WiFiManager \fBwifimanager\fP"
+.br
+.ti -1c
 .RI "WiFiUDP \fBntpUDP\fP"
+.br
+.ti -1c
+.RI "\fBConfig\fP \fBconfig\fP"
 .br
 .ti -1c
 .RI "\fBRGB\fP \fBcolor\fP = {0,0,0}"
@@ -225,7 +243,7 @@ String
 .PP
 
 .PP
-Definition at line 412 of file main\&.cpp\&.
+Definition at line 544 of file main\&.cpp\&.
 .SS "void handleAction ()"
 
 .PP
@@ -249,7 +267,7 @@ void
 .PP
 On Off Pump
 .PP
-Definition at line 344 of file main\&.cpp\&.
+Definition at line 440 of file main\&.cpp\&.
 .SS "bool handleFileRead (String path)"
 
 .PP
@@ -267,7 +285,7 @@ bool
 .PP
 
 .PP
-Definition at line 420 of file main\&.cpp\&.
+Definition at line 552 of file main\&.cpp\&.
 .SS "handleNotFound ()"
 
 .PP
@@ -313,13 +331,59 @@ void
 .PP
 
 .PP
-Definition at line 335 of file main\&.cpp\&.
+Definition at line 431 of file main\&.cpp\&.
+.SS "void loadConfigurator (const char * filename, \fBConfig\fP & config)"
+
+.PP
+read config file 
+.PP
+\fBParameters\fP
+.RS 4
+\fIfilename\fP - const char* 
+.br
+\fIconfig\fP - \fBConfig\fP 
+.RE
+.PP
+\fBReturns\fP
+.RS 4
+void 
+.RE
+.PP
+
+.PP
+Definition at line 571 of file main\&.cpp\&.
 .SS "void loop ()"
 
 .PP
-Definition at line 270 of file main\&.cpp\&.
+Definition at line 359 of file main\&.cpp\&.
 .SS "NTPClient \fBntp\fP (\fBntpUDP\fP, 'b\&.st1\&.ntp\&.br', \-3 * 3600)"
 
+.SS "void saveCallbackConfig ()"
+
+.PP
+set flag save config 
+.PP
+Definition at line 627 of file main\&.cpp\&.
+.SS "void saveConfig (const char * filename, \fBConfig\fP & config)"
+
+.PP
+read config file 
+.PP
+\fBParameters\fP
+.RS 4
+\fIfilename\fP - const char* 
+.br
+\fIconfig\fP - \fBConfig\fP 
+.RE
+.PP
+\fBReturns\fP
+.RS 4
+void 
+.RE
+.PP
+
+.PP
+Definition at line 601 of file main\&.cpp\&.
 .SS "ESP8266WebServer \fBserverA\fP (80)"
 
 .SS "setup ()"
@@ -334,7 +398,7 @@ Setting source\&.
 .PP
  
 .PP
-Definition at line 215 of file main\&.cpp\&.
+Definition at line 274 of file main\&.cpp\&.
 .SS "bool wait ()"
 
 .PP
@@ -358,136 +422,113 @@ Boolean type
 .PP
 
 .PP
-Definition at line 309 of file main\&.cpp\&.
-.SS "void wait (unsigned long t)"
+Definition at line 405 of file main\&.cpp\&.
+.SS "void wait1 (unsigned long t)"
 
 .PP
-Wait for set time\&. generates delay without locking the code
+Wait for set time\&. 
 .PP
-.PP
-.nf
-     set delay with millis() function
-     with parameter t
-.fi
-.PP
-.PP
-\fBParameters\fP
-.RS 4
-\fIt\fP - unsigned long 
-.RE
-.PP
-\fBReturns\fP
-.RS 4
-void 
-.RE
-.PP
-
-.PP
-Definition at line 323 of file main\&.cpp\&.
+Definition at line 419 of file main\&.cpp\&.
 .SH "Variable Documentation"
 .PP 
 .SS "\fBRGB\fP color = {0,0,0}"
 object \fBRGB\fP color 
 .PP
-Definition at line 123 of file main\&.cpp\&.
+Definition at line 151 of file main\&.cpp\&.
+.SS "\fBConfig\fP config"
+
+.PP
+Definition at line 150 of file main\&.cpp\&.
+.SS "const char* filename = '/config\&.txt'"
+
+.PP
+Definition at line 45 of file main\&.cpp\&.
 .SS "bool hand = true"
 handle manual or automatic action 
 .PP
-Definition at line 45 of file main\&.cpp\&.
-.SS "const char* host = 'aqua'"
-hostname for local access 
-.PP
-Definition at line 41 of file main\&.cpp\&.
+Definition at line 46 of file main\&.cpp\&.
 .SS "ESP8266HTTPUpdateServer \fBhttpUpdater\fP"
 
 .PP
 INSTANCE FOR HTTP UPDATE\&. 
 .PP
-Definition at line 74 of file main\&.cpp\&.
+Definition at line 77 of file main\&.cpp\&.
 .SS "String ntpTime = ''"
 Store ntp time 
 .PP
-Definition at line 56 of file main\&.cpp\&.
+Definition at line 59 of file main\&.cpp\&.
 .SS "WiFiUDP \fBntpUDP\fP"
 
 .PP
-Definition at line 94 of file main\&.cpp\&.
+Definition at line 104 of file main\&.cpp\&.
 .SS "String page = ''"
 
 .PP
 define ldr sensor Store page HTML 
 .PP
-Definition at line 55 of file main\&.cpp\&.
-.SS "const char* pass = 'senha123'"
-paasword for access 
-.PP
-Definition at line 40 of file main\&.cpp\&.
-.SS "const char* PASSWD = 'aoc18090'"
-
-.PP
-Password for Network\&. 
-.PP
-Definition at line 44 of file main\&.cpp\&.
+Definition at line 58 of file main\&.cpp\&.
 .SS "int pinB = 14"
 Set pin blue as number 14 
 .PP
-Definition at line 52 of file main\&.cpp\&.
+Definition at line 55 of file main\&.cpp\&.
 .SS "int pinG = 13"
 Set pin green as number 13 
 .PP
-Definition at line 51 of file main\&.cpp\&.
+Definition at line 54 of file main\&.cpp\&.
 .SS "int pinR = 12"
 Set pin red as number 12 
 .PP
-Definition at line 50 of file main\&.cpp\&.
+Definition at line 53 of file main\&.cpp\&.
 .SS "unsigned long previusTime = 0"
 receive previus time for trigger delay 
 .PP
-Definition at line 47 of file main\&.cpp\&.
+Definition at line 50 of file main\&.cpp\&.
 .SS "unsigned long previusTimes = 0"
 receive previus time for trigger delay ntp 
 .PP
-Definition at line 48 of file main\&.cpp\&.
-.SS "String prog1 = '0'"
-
+Definition at line 51 of file main\&.cpp\&.
+.SS "String prog1 = '00:00:00'"
+store time on pump 
 .PP
-Definition at line 57 of file main\&.cpp\&.
-.SS "String prog2 = '0'"
-
+Definition at line 60 of file main\&.cpp\&.
+.SS "String prog2 = '00:00:00'"
+store time off pump 
 .PP
-Definition at line 58 of file main\&.cpp\&.
+Definition at line 61 of file main\&.cpp\&.
 .SS "int pump = 5"
 
 .PP
 define pin of pump 
 .PP
-Definition at line 53 of file main\&.cpp\&.
+Definition at line 56 of file main\&.cpp\&.
+.SS "bool pumpAuto = false"
+store status pump auto 
+.PP
+Definition at line 47 of file main\&.cpp\&.
 .SS "unsigned long setTime = 1000"
 set time delay 
 .PP
-Definition at line 46 of file main\&.cpp\&.
-.SS "const char* SSID = 'Virus'"
+Definition at line 49 of file main\&.cpp\&.
+.SS "bool shouldSave = false"
 
 .PP
-Ssid Network\&. 
-.PP
-Definition at line 43 of file main\&.cpp\&.
+Definition at line 48 of file main\&.cpp\&.
 .SS "int sunLight = 4"
 
 .PP
-Definition at line 54 of file main\&.cpp\&.
+Definition at line 57 of file main\&.cpp\&.
 .SS "const char* update_path = '/firmware'"
 Path for update 
 .PP
-Definition at line 42 of file main\&.cpp\&.
+Definition at line 44 of file main\&.cpp\&.
 .SS "File uploadFile"
 Store data for SPIFFS readed 
 .PP
-Definition at line 49 of file main\&.cpp\&.
-.SS "const char* user = 'admin'"
-username for login 
+Definition at line 52 of file main\&.cpp\&.
+.SS "WiFiManager \fBwifimanager\fP"
+
 .PP
-Definition at line 39 of file main\&.cpp\&.
+Definition at line 97 of file main\&.cpp\&.
 .SH "Author"
 .PP 
 Generated automatically by Doxygen for Aqua Control from the source code\&.

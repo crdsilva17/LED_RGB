@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['ntp_14',['ntp',['../classntp.html',1,'ntp'],['../main_8cpp.html#ae861f4e84d32588c72addb44b26b72bd',1,'ntp(ntpUDP,&quot;b.st1.ntp.br&quot;, -3 *3600):&#160;main.cpp']]],
-  ['ntptime_15',['ntpTime',['../main_8cpp.html#a69defef8ba88aab988376e79f2dec271',1,'main.cpp']]],
-  ['ntpudp_16',['ntpUDP',['../classntp_u_d_p.html',1,'ntpUDP'],['../main_8cpp.html#a22f33e7e05df58bb6145bb6e543e232a',1,'ntpUDP():&#160;main.cpp']]]
+  ['led_14',['led',['../main_8cpp.html#a62224d5046c90fccd4f70583b69fdf55',1,'main.cpp']]],
+  ['loadconfigurator_15',['loadConfigurator',['../main_8cpp.html#ae07c55e3002d77f91c591961ea75c415',1,'main.cpp']]],
+  ['loop_16',['loop',['../main_8cpp.html#afe461d27b9c48d5921c00d521181f12f',1,'main.cpp']]],
+  ['led_5frgb_17',['LED_RGB',['../md__c_1__users_crist__one_drive__documentos__platform_i_o__projects__l_e_d__r_g_b__l_e_d__r_g_b__r_e_a_d_m_e.html',1,'']]]
 ];

@@ -23,6 +23,7 @@ for the JavaScript code in this file
 var NAVTREE =
 [
   [ "Aqua Control", "index.html", [
+    [ "LED_RGB", "md__c_1__users_crist__one_drive__documentos__platform_i_o__projects__l_e_d__r_g_b__l_e_d__r_g_b__r_e_a_d_m_e.html", null ],
     [ "Todo List", "todo.html", null ],
     [ "Bug List", "bug.html", null ],
     [ "Classes", "annotated.html", [

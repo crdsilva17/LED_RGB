@@ -27,6 +27,8 @@
 #include <ESP8266HTTPUpdateServer.h>
 #include <WiFiUdp.h>
 #include <NTPClient.h>
+#include <WiFiManager.h>
+#include <ArduinoJson.h>
 
 /******************************************************
  * DEFINES
@@ -36,14 +38,14 @@
 /**************************************************************
  * GLOBAL VARIABLES
  **************************************************************/
-const char* user = "admin"; /*!< username for login*/
-const char* pass = "senha123"; /*!< paasword for access*/
-const char* host = "aqua"; /*!< hostname for local access*/
+
+
+
 const char* update_path = "/firmware"; /*!< Path for update*/
-const char* SSID = "Virus"; ///< Ssid Network
-const char* PASSWD =  "aoc18090"; ///< Password for Network
+const char* filename = "/config.txt";
 bool hand = true; /*!< handle manual or automatic action*/
 bool pumpAuto = false; /*!< store status pump auto*/
+bool shouldSave = false;
 unsigned long setTime = 1000; /*!< set time delay */
 unsigned long previusTime = 0; /*!< receive previus time for trigger delay */
 unsigned long previusTimes = 0; /*!< receive previus time for trigger delay ntp */
@@ -55,8 +57,8 @@ int pump = 5; ///< define pin of pump
 int sunLight = 4; /// define ldr sensor
 String page = ""; /*!< Store page HTML */
 String ntpTime = ""; /*!< Store ntp time */
-String prog1 = "00:00:00";
-String prog2 = "00:00:00";
+String prog1 = "00:00:00";/*!< store time on pump*/
+String prog2 = "00:00:00";/*!< store time off pump*/
 
 
 /******************************************************************
@@ -74,18 +76,25 @@ String prog2 = "00:00:00";
  */
   ESP8266HTTPUpdateServer httpUpdater; ///< INSTANCE FOR HTTP UPDATE
 /**
- * @class serverA(80)
+ * @class serverA(port)
  * @brief WebServer Class
  * 
  * This create a object for handle request response of client
  * 
- * @param 80 - Web port
+ * @param port - Web port
  * 
  * @see other classes
  *      - httpUpdater
  *      - RGB
  **/
   ESP8266WebServer serverA(80); 
+
+/**
+ * @class wifimanager
+ * @brief WiFiManager Class
+ * 
+ * */
+  WiFiManager wifimanager;
 
 /**
  * @class ntpUDP
@@ -121,6 +130,24 @@ NTPClient ntp(ntpUDP,"b.st1.ntp.br", -3 * 3600);
     byte b; /*!< RECEIVE BYTE COLOR BLUE*/
   };
   
+/**
+ * @struct Config 
+ * @brief Struct for setting
+ * 
+ * Generates struct for setting object
+ * 
+ * @see other classes
+ *      - serverA
+ *      - httpUpdater
+ *      - RGB
+ */
+struct Config{
+  char user[20]; /*!< username for login*/
+  char pass[16]; /*!< paasword for access*/
+  char host[20]; /*!< hostname for local access*/
+};
+
+Config config;
 RGB color = {0,0,0};/*!< object RGB color */
 
 
@@ -137,6 +164,35 @@ RGB color = {0,0,0};/*!< object RGB color */
  * @return void
  * */
 void handleAction();
+
+/**
+ * @fn loadConfigurator(const char* filename, Config &config)
+ * @brief read config file
+ * 
+ * @param filename - const char*
+ * @param config - Config
+ * @return void
+ * */
+void loadConfigurator(const char* filename, Config &config);
+
+/**
+ * @fn saveCallbackConfig()
+ * @brief set flag save config
+ * 
+ * 
+ * */
+void saveCallbackConfig();
+
+/**
+ * @fn saveConfig(const char* filename, Config &config)
+ * @brief read config file
+ * 
+ * @param filename - const char*
+ * @param config - Config
+ * @return void
+ * */
+void saveConfig(const char* filename, Config &config);
+
 /**
  * @fn handleNotFound()
  * @brief handle error 404
@@ -204,6 +260,8 @@ String getContentType(String filename); // convert the file extension to the MIM
 bool handleFileRead(String path);       // send the right file to the client (if it exists)
 
 
+
+
 /********************************************
  *  IMPLAMENTATION
  * *******************************************/
@@ -216,6 +274,39 @@ bool handleFileRead(String path);       // send the right file to the client (if
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
+
+  loadConfigurator(filename, config);
+  Serial.println("Prepair parameters");
+  
+  //Parameters of setting
+  WiFiManagerParameter custom_hostname("host","hostname",config.host,sizeof(config.host));
+  WiFiManagerParameter custom_pass("pass","password",config.pass, sizeof(config.pass));
+  WiFiManagerParameter custom_user("user","username",config.user, sizeof(config.user));
+
+  wifimanager.setSaveConfigCallback(saveCallbackConfig);
+
+  wifimanager.addParameter(&custom_hostname);
+  wifimanager.addParameter(&custom_user);
+  wifimanager.addParameter(&custom_pass);
+
+    String mac ="_";
+    mac += WiFi.macAddress();
+    mac = config.host + mac;
+    if(!wifimanager.autoConnect(mac.c_str() ,config.pass)){
+      Serial.println("Failed to connect");
+      delay(3000);
+      ESP.reset();
+      delay(5000);
+    }
+
+    //Copy values and store in struct
+    strcpy(config.host,custom_hostname.getValue());
+    strcpy(config.pass,custom_pass.getValue());
+    strcpy(config.user,custom_user.getValue());
+
+    saveConfig(filename,config);
+
+
   pinMode(pinR, OUTPUT); /* Set pin red as Output */
   pinMode(pinG, OUTPUT); /* Set pin green as Output */
   pinMode(pinB, OUTPUT); /* Set pin blue as Output */
@@ -230,19 +321,18 @@ void setup() {
   analogWriteRange(8); /* PWM Range 0 at 255 */
   analogWriteFreq(300); /* Set Frequency to 300 hz */
 
+ /*
   WiFi.mode(WIFI_STA); /* Set device as Station mode */
-  WiFi.begin(SSID,PASSWD); /* Try connect to network */
-  Serial.print("Connecting ");
+ /* WiFi.begin(config.ssid,config.passwd); /* Try connect to network */
+  /*Serial.print("Connecting ");
   while(WiFi.status() != WL_CONNECTED){
     Serial.print(".");
     delay(500);
-  }
+  }*/
   Serial.println("Connected.");
   Serial.println(WiFi.localIP().toString());
+  
   serverA.on("/", [](){
-    if(!serverA.authenticate(user,pass)){ 
-      return serverA.requestAuthentication(); 
-    }
     //handleRoot(); 
         if (!handleFileRead(serverA.uri()))                  // send it if it exists
       serverA.send(404, "text/plain", "404: Not Found"); // otherwise, respond with a 404 (Not Found) error
@@ -256,12 +346,10 @@ void setup() {
   });
 
   
-  MDNS.begin(host);
-  httpUpdater.setup(&serverA, update_path, user, pass);
+  MDNS.begin(config.host);
+  httpUpdater.setup(&serverA, update_path, config.user, config.pass);
   serverA.begin();
-
   ntp.begin();
-
   MDNS.addService("http", "tcp", 80);
 
 }
@@ -270,7 +358,8 @@ void setup() {
 
 void loop() {
   
-  if((hand != true) && (digitalRead(sunLight))){
+  if(hand != true){
+    if(digitalRead(sunLight)){
     bool delay = wait();
     led(color);
     if(delay){
@@ -288,6 +377,11 @@ void loop() {
         color.b--;
       }
     }
+    }else{
+      color = {0,0,0};
+      led(color);
+    }
+    led(color);
     }
   if(pumpAuto == true){
   if((prog1 == ntpTime)&&(digitalRead(pump) == LOW)){
@@ -345,7 +439,7 @@ void led(RGB colorname){
  * */
 void handleAction(){
 
-  if(serverA.argName(0).equals("update")){
+  if(serverA.argName(0).equals("update")){ //update value for client
     String json;
     json.reserve(128);
     json = "{\"led\":";
@@ -425,6 +519,7 @@ void handleAction(){
       color = {15,0,0};
     }else if(serverA.arg(0).equals("handle")){
       hand = true;
+      color = {0,0,0};
     }
   }
   if(serverA.argName(1).equals("speed")){
@@ -473,3 +568,63 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
   return false;                                         // If the file doesn't exist, return false
 }
 
+void loadConfigurator(const char* filename, Config &config){
+
+  if(SPIFFS.begin()){
+    Serial.println("mount File system.....");
+    File file;
+    if(SPIFFS.exists(filename)){
+      Serial.println("file found!!!");
+      file = SPIFFS.open(filename, "r");
+      Serial.println("readinng file....");
+    }else{
+      Serial.println("file not found!!  Create");
+      file = SPIFFS.open(filename,"w");
+    }
+    
+    StaticJsonDocument<256> doc;
+    Serial.println("doc create");
+    DeserializationError error = deserializeJson(doc,file);
+    Serial.println("deserialization");
+    if(error) Serial.println("Failed to read file, using default config");
+    strlcpy(config.host,doc["hostname"]|"aqua",sizeof(config.host));
+    strlcpy(config.pass,doc["pass"]|"senha123",sizeof(config.pass));
+    strlcpy(config.user,doc["user"]|"root",sizeof(config.user));
+    file.close();
+    Serial.println("close file");
+    SPIFFS.end();
+    Serial.println("end System file");
+  }
+
+}
+
+void saveConfig(const char* filename, Config &config){
+  
+  if(SPIFFS.begin()){
+    Serial.println("mount File system....");
+    if(SPIFFS.exists(filename)){
+      SPIFFS.remove(filename);
+    }
+    Serial.println("Create file");
+    File file = SPIFFS.open(filename,"w");
+    if(!file){
+      Serial.println("Failed to create file");
+      SPIFFS.end();
+      return;
+    }
+    StaticJsonDocument<256> doc;
+    doc["hostname"] = config.host;
+    doc["pass"] = config.pass;
+    doc["user"] = config.user;
+    if(serializeJson(doc,file) == 0){
+      Serial.println("Failed to write file");
+    }
+    file.close();
+    SPIFFS.end();
+  }
+}
+
+void saveCallbackConfig(){
+  Serial.println("set save flag true");
+  shouldSave = true;
+}

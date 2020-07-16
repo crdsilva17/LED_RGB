@@ -1,3 +1,11 @@
+/**
+ * @fn senCor()
+ * @brief Envia cor padrão RGB
+ * 
+ *          coleta cor selecionada pelo usuário e
+ *          envia para o servidor.
+ * 
+ * */
 function sendCor(){
 
     var xh = new XMLHttpRequest();
@@ -20,6 +28,17 @@ console.log("RGB(",R,",",G,",",B,")");
 xh.send(params);
 }
 
+/**
+ * @fn pumpSet(param1, param2, param3)
+ * @brief envia status da bomba
+ * 
+ *          Responsável por ligar e desligar
+ *          bomba da piscina.    
+ *  
+ * @param {*} param1 
+ * @param {*} param2 
+ * @param {*} param3 
+ * */
 function pumpSet(param1, param2, param3){
     var xh = new XMLHttpRequest();
     xh.open("POST","/update", true);
@@ -35,7 +54,19 @@ function pumpSet(param1, param2, param3){
     console.log(param1,": ", param2);
     console.log("speed: ", param3);
 }
-
+/**
+ * @fn pumpSet1(param1, param2, param3, param4)
+ * @brief Altera valores auto/manual 
+ * 
+ *          configura tempos para ligar e
+ *          desligar bomba automaticamente
+ * 
+ * 
+ * @param {*} param1 
+ * @param {*} param2 
+ * @param {*} param3 
+ * @param {*} param4 
+ * */
 function pumpSet1(param1, param2, param3, param4){
     var xh = new XMLHttpRequest();
     xh.open("POST","/update", true);
@@ -52,6 +83,13 @@ function pumpSet1(param1, param2, param3, param4){
     console.log(param1," auto: ", param2);
 }
 
+/**
+ * @fn init()
+ * @brief Função inicial
+ * 
+ *          roda após página carregar
+ * 
+ * */
 function init(){
 document.getElementById("selector").addEventListener("input",sendCor);
 document.querySelector("#pump").addEventListener("change",function(envent){
@@ -97,8 +135,16 @@ document.querySelector(".sec1").addEventListener("change",set_sec);
 
 }
 
+/**
+ * @fn updateValue()
+ * @brief Atualizar dados
+ * 
+ *          mantêm dados atualizados para os 
+ *          clientes conectados.
+ *          Atualização roda a cada 1 segundo.
+ * */
 function updateValue(){
-    setTimeout(updateValue,60000);
+    setTimeout(updateValue,1000);
     var xhjson = new XMLHttpRequest();
     xhjson.open("POST","/update",true);
     xhjson.onreadystatechange = function (){
@@ -140,34 +186,54 @@ function updateValue(){
         }else{
             cor += blue.toString(16);
         }
+        if(selector.value != cor){
         selector.value = cor;
+        }
+        if(auto.checked == true){
         speed.value = range;
-        console.log(red);
+        }
+        
+        if(pumpAuto != pump.checked){
         if(pumpAuto == true){
         pump.checked = true;
         }else{
             pump.checked = false;
         }
-
+        }
+if(pump.checked == true){
+        if(document.querySelector(".hour").value != time1[0]){
         document.querySelector(".hour").value = time1[0];
+        }
+        if(document.querySelector(".min").value != time1[1]){
         document.querySelector(".min").value = time1[1];
+        }
+        if(document.querySelector(".sec").value != time1[2]){
         document.querySelector(".sec").value = time1[2];
+        }
 
+        if( document.querySelector(".hour1").value != time2[0]){
         document.querySelector(".hour1").value = time2[0];
+        }
+        if(document.querySelector(".min1").value != time2[1]){
         document.querySelector(".min1").value = time2[1];
+        }
+        if(document.querySelector(".sec1").value != time2[2]){
         document.querySelector(".sec1").value = time2[2];
-        
+        }
+    }
         if(pump.checked){
             document.querySelector("#setPump").disabled = true;
         }else{
             document.querySelector("#setPump").disabled = false;
         }
 
+        if(ledAuto == auto.checked){
         if(ledAuto == true){
         auto.checked = false;
          }else{
         auto.checked = true;
          }
+        }
           if (auto.checked) {
         selector.disabled = true;
           }else{
@@ -181,7 +247,15 @@ function updateValue(){
     xhjson.send(form);
 }
 
-
+/**
+ * @fn moveClock()
+ * @brief Relógio
+ * 
+ *          Mantêm relógio atualizado
+ *         Roda a cada 1 segundo.
+ * 
+ * 
+ * */
 function moveClock(){
     dateNow = new Date();
     hora = dateNow.getHours();
