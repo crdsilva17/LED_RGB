@@ -359,7 +359,7 @@ void setup() {
 void loop() {
   
   if(hand != true){
-    if(digitalRead(sunLight)){
+    if(!digitalRead(sunLight)){
     bool delay = wait();
     led(color);
     if(delay){
@@ -375,6 +375,8 @@ void loop() {
         color.r++;
       }else if(color.b > 0 && color.g == 0 && color.r >= 15){
         color.b--;
+      }else if(color.r < 15 && color.g == 0 && color.b == 0){
+        color.r++;
       }
     }
     }else{
