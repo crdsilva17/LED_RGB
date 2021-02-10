@@ -48,9 +48,9 @@ function init(){
             dadosJson = JSON.parse(this.responseText); // Recebe dados de atualização da página
             prog = dadosJson.pgr;
             hora = dadosJson.hr;
-            
-        }
 
+        }
+      }
 };
 
 //Função que envia valores para o servidor
@@ -103,7 +103,7 @@ function myFunction() {
     } else {
       x.style.display = "block";
     }
-  }
+  };
 
 
 //Main
