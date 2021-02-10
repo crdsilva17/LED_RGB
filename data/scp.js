@@ -7,6 +7,11 @@
 
 var stsLed;
 var stsPump;
+var programas;
+var horarios;
+var ip;
+var gw;
+var sn;
 
 //Função de Inicialização
 function init(){
@@ -22,11 +27,19 @@ function init(){
             stsLed = dadosJson.Led; // Verifica estado do Painel de Led
             stsPump = dadosJson.Pump; // Verifica estado da Bomba
 
+
             if(ledPanel != null){ // Caso painel de Led exista
               if(stsLed == "manual"){ // e o estado do led seja manual
                 ledPanel.disabled = false; // Habilita painel de Led para interação
               }else{
                 ledPanel.disabled = true; // senão desabilita painel de Led
+              }
+            }
+            if(swPump != null){
+              if(stsPump){
+                swPump.checked = true;
+              }else{
+                swPump.checked = false;
               }
             }
 

@@ -19,6 +19,7 @@
  * ******************/
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <FS.h>
@@ -28,7 +29,6 @@
 #include <WiFiUdp.h>
 #include <NTPClient.h>
 #include <WiFiManager.h>
-#include <ArduinoJson.h>
 
 /******************************************************
  * DEFINES
@@ -43,7 +43,6 @@
 
 const char* update_path = "/firmware"; /*!< Path for update*/
 const char* filename = "/setting.json";
-const char* jsonFile = "/config.json";
 String dias_da_Semana [7] = {"Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"};
 bool progs [5][7] = {{false,false,false,false,false,false,false}, {false,false,false,false,false,false,false},
                      {false,false,false,false,false,false,false}, {false,false,false,false,false,false,false},
@@ -155,7 +154,7 @@ struct Config{
   uint32_t gw;
   uint32_t sn;
   bool pump;
-  String led;
+  char led[16];
   bool programas [5][7];
   String horarios [5][2];
 }config;
@@ -304,6 +303,8 @@ int strToByte(String str);
  * */
 void handleUpdate();
 
+void strTochar(String str, char * carc);
+
 
 /**
  * @class IPAddressParameter : public WiFiManagerParameter
@@ -415,7 +416,7 @@ void setup() {
       serverA.send(404, "text/plain", "404: Not Found"); // otherwise, respond with a 404 (Not Found) error
   });
   
-  serverA.on("/update.json",handleUpdate); 
+  serverA.on("/update",handleUpdate); 
 
   serverA.on("/pump", handleActionPump);
 
@@ -482,7 +483,7 @@ void led(RGB colorname){
 
 void handleUpdate(){
     // Envia atualização de páginas
-
+    serverA.send(200,"application/json", filename);
 }
 
 /**
@@ -493,13 +494,13 @@ void handleActionPump(){
     if(serverA.argName(0).equals("setPump")){
       if(serverA.arg(0).equals("on")){
         digitalWrite(pump, HIGH);
-        Serial.println("Pump On");
+        config.pump = true;
       }else if(serverA.arg(0).equals("off")){
         digitalWrite(pump, LOW);
-        Serial.println("Pump Off");
+        config.pump = false;
       }
     }
-
+    saveConfig(filename, config);
   }
 
 void handleActionLed(){
@@ -513,10 +514,17 @@ void handleActionLed(){
     
   }else if(serverA.argName(0).equals("estado")){
     ledStatus = serverA.arg(0);
+    strTochar(ledStatus, config.led);
+    saveConfig(filename, config);
   }
 
 }
 
+void strTochar(String str, char * carc){
+  for(int i = 0; i < str.length(); i++){
+    carc[i] = str[i];
+  }
+}
 
 //Convert string to byte
 int strToByte(String str){
@@ -587,15 +595,13 @@ void loadConfigurator(const char* filename, Config &config){
     strlcpy(config.pass,doc["pass"]|"admin123",sizeof(config.pass));
     strlcpy(config.user,doc["user"]|"admin",sizeof(config.user));
     config.ip = doc["ip"];
-    Serial.println("IP config:");
     IPAddress _ip(config.ip);
-    Serial.println(_ip);
     config.gw = doc["gw"];
     config.sn = doc["sn"];
     config.pump = doc["Pump"];
-    config.led = doc["Led"];
-    config.programas = doc["pgr"];
-    config.horarios = doc["hr"];
+    strlcpy(config.led, doc["Led"], sizeof(config.led));
+    copyArray(doc["pgr"],config.programas);
+    copyArray(doc["hr"], config.horarios);
     file.close();
     Serial.println("close file");
     SPIFFS.end();
@@ -629,8 +635,8 @@ void saveConfig(const char* filename, Config &conf){
     doc["sn"] = dados.sn;
     doc["Pump"] = dados.pump;
     doc["Led"] = dados.led;
-    doc["pgr"] = dados.programas;
-    doc["hr"] = dados.horarios;
+    copyArray(dados.programas, doc["pgr"]);
+    copyArray(dados.horarios, doc["hr"]);
     if(serializeJson(doc,file) == 0){
       Serial.println("Failed to write file");
     }

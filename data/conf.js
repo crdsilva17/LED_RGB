@@ -6,6 +6,7 @@
 var btn_add = document.querySelector("#btn-add");
 var local = document.querySelector("#local");
 var prog = [];
+var hora = [];
 var valor = 1;
 var MAX = 6;
 
@@ -36,11 +37,27 @@ function tableCreate(index){
 
 };
 
+
+//Função de inicialização
+function init(){
+  let xh = new XMLHttpRequest();
+
+    xh.onreadystatechange = function(){
+        if (this.readyState == 4 && this.status == 200){
+            // atualiza pagina aqui
+            dadosJson = JSON.parse(this.responseText); // Recebe dados de atualização da página
+            prog = dadosJson.pgr;
+            hora = dadosJson.hr;
+            
+        }
+
+};
+
 //Função que envia valores para o servidor
 function save(){
 
 
-}
+};
 
 /**
  * @function delet
@@ -92,3 +109,5 @@ function myFunction() {
 //Main
 
 btn_add.addEventListener('click', criarTabela);
+
+document.addEventListener("DOMContentLoaded", init, false);
