@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="st.css">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <script src="scp.js"></script>
+    <title>Configuração</title>
+</head>
+<body>
+    <header class="header">   
+        <div class="menu">
+            <p class="ativo"><img src="icone.png" alt="logo"></p>
+         <div id="meuMenu">
+            <ul>
+                <li><a href="index.htm">Inicio</a></li>
+                <li><a href="confi.htm">Programar Bomba</a></li>
+                <li><a href="led.htm">Programar Led</a></li>
+                <li><a href="set.htm">Configuração</a></li>
+            </ul>
+        </div>
+        <a href="#" class="icon" onclick="myFunction()">
+            <hr><hr><hr>
+        </a>
+        </div>
+        </header>
+    
+    <section>
+        <fieldset>
+            <legend>DHCP</legend>
+            <input type="radio" class="radiobutton" name="dhcp" id="autoDHCP" checked>
+            <label class="radio" for="autoDHCP">Auto</label> <br>
+            <input type="radio" class="radiobutton" name="dhcp" id="manDHCP">
+            <label class="radio" for="manDHCP">Manual</label> <br>
+            <div id="manualIP">
+                <label for="ip">Endereço IP </label>
+                <input type="text" minlength="7" maxlength="15" size="15" pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$"> <br>
+                <label for="mask">Sub-Rede</label>
+                <input type="text" minlength="7" maxlength="15" size="15" pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$"> <br>
+                <label for="gateway">Gateway</label>
+                <input type="text" minlength="7" maxlength="15" size="15" pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$"> <br>
+            </div>
+            <input type="button" value="Salvar"> <input type="button" value="Cancelar">
+        </fieldset>
+        <br>
+        <fieldset>
+            <legend>Data e Hora</legend>
+            <input type="date" name="data" id="date">
+            <input type="time" name="hora" id="hour"> <br>
+            <input type="button" value="Atualizar"> <input type="button" value="Salvar">
+        </fieldset>
+        <br>
+        <fieldset>
+            <legend>Reset</legend>
+            <input type="button" value="Reiniciar"> <input type="button" value="Padrão de Fábrica">
+        </fieldset>
+    </section>
+    <div class="footer">
+        <div>
+            <h5>Automação 2020</h5>
+        </div>
+    </div>
+</body>
+</html>

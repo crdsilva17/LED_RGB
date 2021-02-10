@@ -9,7 +9,7 @@
  *          - Turn on Led
  *          - OnOff Pump
  * @bug Bugs list
- * @copyright RC Automação all copyrights reserved
+ * @copyright Smart Home System Automação all copyrights reserved
  * 
  * */
 
@@ -42,8 +42,13 @@
 
 
 const char* update_path = "/firmware"; /*!< Path for update*/
-const char* filename = "/config.txt";
-bool hand = true; /*!< handle manual or automatic action*/
+const char* filename = "/setting.json";
+const char* jsonFile = "/config.json";
+String dias_da_Semana [7] = {"Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"};
+bool progs [5][7] = {{false,false,false,false,false,false,false}, {false,false,false,false,false,false,false},
+                     {false,false,false,false,false,false,false}, {false,false,false,false,false,false,false},
+                     {false,false,false,false,false,false,false}};
+String hors [5][2] = {{"null","null"},{"null","null"},{"null","null"},{"null","null"},{"null","null"}};
 bool pumpAuto = false; /*!< store status pump auto*/
 bool shouldSave = false;
 unsigned long setTime = 1000; /*!< set time delay */
@@ -55,10 +60,11 @@ int pinG = 13; /*!< Set pin green as number 13 */
 int pinB = 14; /*!< Set pin blue as number 14 */
 int pump = 5; ///< define pin of pump
 int sunLight = 4; /// define ldr sensor
+int prog = 0;  //Define program run
 String page = ""; /*!< Store page HTML */
-String ntpTime = ""; /*!< Store ntp time */
-String prog1 = "00:00:00";/*!< store time on pump*/
-String prog2 = "00:00:00";/*!< store time off pump*/
+String hora = ""; /*!< Store ntp time */
+String dia = ""; /*!< Store day of week */
+String ledStatus = ""; // Store status of led
 
 
 /******************************************************************
@@ -145,9 +151,20 @@ struct Config{
   char user[20]; /*!< username for login*/
   char pass[16]; /*!< paasword for access*/
   char host[20]; /*!< hostname for local access*/
-};
+  uint32_t ip;
+  uint32_t gw;
+  uint32_t sn;
+  bool pump;
+  String led;
+  bool programas [5][7];
+  String horarios [5][2];
+}config;
 
-Config config;
+IPAddress _ip(config.ip);
+IPAddress _gw(config.gw);
+IPAddress _sn(config.sn);
+
+//Config config;
 RGB color = {0,0,0};/*!< object RGB color */
 
 
@@ -191,7 +208,7 @@ void saveCallbackConfig();
  * @param config - Config
  * @return void
  * */
-void saveConfig(const char* filename, Config &config);
+void saveConfig(const char* filename, Config &conf);
 
 /**
  * @fn handleNotFound()
@@ -225,16 +242,14 @@ void led(RGB colorname);
 bool wait();
 
 /**
- * @fn wait(unsigned long t)
+ * @fn timeClock()
  * @brief  generates delay without locking the code
  * 
  *          set delay with millis() function
- *          with parameter t
- * 
- * @param t - unsigned long
+ *       
  * @return void
  * */
-void wait1(unsigned long t);
+void timeClock();
 /**
  * @fn getContentType(String filename)
  * @brief Convert the file extension to the MIME type
@@ -260,6 +275,53 @@ String getContentType(String filename); // convert the file extension to the MIM
 bool handleFileRead(String path);       // send the right file to the client (if it exists)
 
 
+/**
+ * @fn handleActionPump()
+ * @brief Function for handler pump
+ *        Receiver command from client to start or stop pump
+ * 
+ * @return void
+ *  
+ * */
+void handleActionPump();
+
+/**
+ * @fn handleActionLed()
+ * @brief Function for handler led RGB color
+ *        Turn color of led 
+ * 
+ * @return void
+ * */
+void handleActionLed();
+
+int strToByte(String str);
+
+/**
+ * @fn handleUpdate();
+ * @brief Function to update files in web
+ * 
+ * @return void
+ * */
+void handleUpdate();
+
+
+/**
+ * @class IPAddressParameter : public WiFiManagerParameter
+ * @brief Classe conforme descrito na bibliote WiFimanage
+ * 
+ * @return IPAddress ip
+ * */
+class IPAddressParameter : public WiFiManagerParameter {
+public:
+    IPAddressParameter(const char *id, const char *placeholder, IPAddress address)
+        : WiFiManagerParameter("") {
+        init(id, placeholder, address.toString().c_str(), 16, "", WFM_LABEL_BEFORE);
+    }
+
+    bool getValue(IPAddress &ip) {
+        return ip.fromString(WiFiManagerParameter::getValue());
+    }
+};
 
 
 /********************************************
@@ -282,17 +344,28 @@ void setup() {
   WiFiManagerParameter custom_hostname("host","hostname",config.host,sizeof(config.host));
   WiFiManagerParameter custom_pass("pass","password",config.pass, sizeof(config.pass));
   WiFiManagerParameter custom_user("user","username",config.user, sizeof(config.user));
+  IPAddressParameter   custom_ip("ip", "Static IP", _ip);
+  IPAddressParameter   custom_gw("gw", "Gateway", _gw);
+  IPAddressParameter   custom_sn("sn", "Sub-Mask", _sn);
+
 
   wifimanager.setSaveConfigCallback(saveCallbackConfig);
 
   wifimanager.addParameter(&custom_hostname);
   wifimanager.addParameter(&custom_user);
   wifimanager.addParameter(&custom_pass);
+  wifimanager.addParameter(&custom_ip);
+  wifimanager.addParameter(&custom_gw);
+  wifimanager.addParameter(&custom_sn);
+  _ip = config.ip;
+  _gw = config.gw;
+  _sn = config.sn;
+  wifimanager.setSTAStaticIPConfig(_ip, _gw, _sn);
 
     String mac ="_";
     mac += WiFi.macAddress();
     mac = config.host + mac;
-    if(!wifimanager.autoConnect(mac.c_str() ,config.pass)){
+    if(!wifimanager.autoConnect(mac.c_str(), config.pass)){
       Serial.println("Failed to connect");
       delay(3000);
       ESP.reset();
@@ -303,6 +376,18 @@ void setup() {
     strcpy(config.host,custom_hostname.getValue());
     strcpy(config.pass,custom_pass.getValue());
     strcpy(config.user,custom_user.getValue());
+
+    if(custom_ip.getValue(_ip)){
+      config.ip = _ip;
+    }
+
+    if(custom_gw.getValue(_gw)){
+      config.gw = _gw;
+    }
+
+    if(custom_sn.getValue(_sn)){
+      config.sn = _sn;
+    }
 
     saveConfig(filename,config);
 
@@ -318,17 +403,9 @@ void setup() {
   digitalWrite(pinG,LOW); /* Turn off pin green */
   digitalWrite(pinB,LOW); /* Turn off pin blue */
 
-  analogWriteRange(8); /* PWM Range 0 at 255 */
-  analogWriteFreq(300); /* Set Frequency to 300 hz */
+  analogWriteRange(255); // 8 bits resolution
+  analogWriteFreq(1000); // 1khz frequency
 
- /*
-  WiFi.mode(WIFI_STA); /* Set device as Station mode */
- /* WiFi.begin(config.ssid,config.passwd); /* Try connect to network */
-  /*Serial.print("Connecting ");
-  while(WiFi.status() != WL_CONNECTED){
-    Serial.print(".");
-    delay(500);
-  }*/
   Serial.println("Connected.");
   Serial.println(WiFi.localIP().toString());
   
@@ -338,7 +415,11 @@ void setup() {
       serverA.send(404, "text/plain", "404: Not Found"); // otherwise, respond with a 404 (Not Found) error
   });
   
-  serverA.on("/update",handleAction); 
+  serverA.on("/update.json",handleUpdate); 
+
+  serverA.on("/pump", handleActionPump);
+
+  serverA.on("/led", handleActionLed);
 
   serverA.onNotFound([]() {                              // If the client requests any URI
     if (!handleFileRead(serverA.uri()))                  // send it if it exists
@@ -358,47 +439,9 @@ void setup() {
 
 void loop() {
   
-  if(hand != true){
-    if(!digitalRead(sunLight)){
-    bool delay = wait();
-    led(color);
-    if(delay){
-      if(color.r >= 15 && color.g < 15 && color.b == 0){
-        color.g++;
-      }else if(color.r > 0 && color.g >= 15 && color.b == 0){
-        color.r--;
-      }else if(color.r == 0 && color.b < 15 && color.g >= 15){
-        color.b++;
-      }else if(color.b >= 15 && color.g > 0 && color.r == 0){
-        color.g--;
-      }else if(color.b >= 15 && color.r < 15 && color.g == 0){
-        color.r++;
-      }else if(color.b > 0 && color.g == 0 && color.r >= 15){
-        color.b--;
-      }else if(color.r < 15 && color.g == 0 && color.b == 0){
-        color.r++;
-      }
-    }
-    }else{
-      color = {0,0,0};
-      led(color);
-    }
-    led(color);
-    }
-  if(pumpAuto == true){
-  if((prog1 == ntpTime)&&(digitalRead(pump) == LOW)){
-    Serial.println("Pump on");
-    digitalWrite(pump, HIGH);
-  }
-  if((prog2 == ntpTime)&&(digitalRead(pump) == HIGH)){
-    Serial.println("Pump off");
-    digitalWrite(pump, LOW);
-  }
-  }
-  
   serverA.handleClient();
   MDNS.update();
-  wait1(1000L);
+  timeClock();
 
 }
 /**
@@ -416,14 +459,15 @@ bool wait(){
 }
 
 /**
- * Wait for set time
+ * Update online clock
  **/
-void wait1(unsigned long t){
+void timeClock(){
   unsigned long currentTime = millis();
-  if((currentTime - previusTimes) > t){
+  if((currentTime - previusTimes) > 1000L){
     previusTimes = currentTime;
     ntp.update();
-    ntpTime = ntp.getFormattedTime();
+    hora = ntp.getFormattedTime();
+    dia = dias_da_Semana[ntp.getDay()];
   }
 }
 
@@ -436,111 +480,60 @@ void led(RGB colorname){
   analogWrite(pinB,colorname.b);
 }
 
+void handleUpdate(){
+    // Envia atualização de páginas
+
+}
+
 /**
  * function to do action requested by client
  * */
-void handleAction(){
-
-  if(serverA.argName(0).equals("update")){ //update value for client
-    String json;
-    json.reserve(128);
-    json = "{\"led\":";
-    if(hand){
-    json += "\"1\"";
-    }else{
-    json += "\"0\"";
-    }
-    json += ", \"pump\":\"";
-    json += pumpAuto;
-    json += "\", \"red\":\"";
-    json += map(color.r,0,15,0,255);
-    json += "\", \"green\":\"";
-    json += map(color.g,0,15,0,255);
-    json += "\", \"blue\":\"";
-    json += map(color.b,0,15,0,255);
-    json += "\", \"prog1\":\"";
-    json += prog1;
-    json += "\", \"prog2\":\"";
-    json += prog2;
-    json += "\", \"range\":\"";
-    json += setTime;
-    json += "\"}";
-
-    serverA.send(200,"application/json", json);
-    
-  }
-
-  if(hand){
-  if(serverA.argName(0).equals("R")){
-    analogWrite(pinR,map(serverA.arg(0).toInt(),0,255,0,15)); //enable PWM to red output
-    color.r = map(serverA.arg(0).toInt(),0,255,0,15);
-  }
-  if(serverA.argName(1).equals("G")){
-    analogWrite(pinG,map(serverA.arg(1).toInt(),0,255,0,15)); // enable PWM to green output
-    color.g = map(serverA.arg(1).toInt(),0,255,0,15);
-  }
-  if(serverA.argName(2).equals("B")){
-    analogWrite(pinB,map(serverA.arg(2).toInt(),0,255,0,15)); // enable PWM to blue output
-    color.b = map(serverA.arg(2).toInt(),0,255,0,15);
-  }
-  String msg = "color{" + (String)color.r + (String)color.g + (String)color.b + "}";
-  Serial.println(msg);
-  }
-
-  /// On Off Pump
-  if(serverA.argName(0).equals("pump")){
-    if(serverA.arg(0).equals("on")){
-      //digitalWrite(pump,HIGH);
-      pumpAuto = true;
-    if(serverA.argName(1).equals("prog1")){
-      prog1 = serverA.arg(1);
-    }
-    if(serverA.argName(2).equals("prog2")){
-      prog2 = serverA.arg(2);
-    }
-    }else if(serverA.arg(0).equals("off")){
-      digitalWrite(pump,LOW);
-      pumpAuto = false;
-    if(serverA.argName(1).equals("prog1")){
-      prog1 = serverA.arg(1);
-    }
-    if(serverA.argName(2).equals("prog2")){
-      prog2 = serverA.arg(2);
-    }
-    }
-
-    Serial.print("Prog1: ");
-    Serial.println(prog1);
-    Serial.print("Prog2: ");
-    Serial.println(prog2);
-  }
-
-  if(serverA.argName(0).equals("color")){
-    if(serverA.arg(0).equals("auto")){
-      hand = false;
-      color = {15,0,0};
-    }else if(serverA.arg(0).equals("handle")){
-      hand = true;
-      color = {0,0,0};
-    }
-  }
-  if(serverA.argName(1).equals("speed")){
-    setTime = serverA.arg(1).toInt();
-  }
-  if(serverA.argName(0).equals("setPump")){
-    if(serverA.arg(0).equals("set")){
-      if(digitalRead(pump) == true){
-        digitalWrite(pump,LOW);
-        Serial.println("Pump off");
-      }else{
-        digitalWrite(pump,HIGH);
-        Serial.println("Pump on");
+void handleActionPump(){
+    //ativar bomba
+    if(serverA.argName(0).equals("setPump")){
+      if(serverA.arg(0).equals("on")){
+        digitalWrite(pump, HIGH);
+        Serial.println("Pump On");
+      }else if(serverA.arg(0).equals("off")){
+        digitalWrite(pump, LOW);
+        Serial.println("Pump Off");
       }
     }
+
   }
-  Serial.print("speed: ");
-  Serial.println((String)setTime);
-  serverA.send(200);
+
+void handleActionLed(){
+  //ativar led
+  if(serverA.argName(0).equals("color")){
+    Serial.println(serverA.arg(0));
+    color.r = strToByte(serverA.arg(0).substring(1,3)); // get red color 
+    color.g = strToByte(serverA.arg(0).substring(3,5)); // get green color 
+    color.b = strToByte(serverA.arg(0).substring(5));   // get blue color
+    led(color);
+    
+  }else if(serverA.argName(0).equals("estado")){
+    ledStatus = serverA.arg(0);
+  }
+
+}
+
+
+//Convert string to byte
+int strToByte(String str){
+  byte p1 = 0;
+  byte p2 = 0;
+  if((str[0] >= 48) && (str[0] <= 57)){
+    p1 = (str[0] - 48) * 16; 
+  }else if((str[0] >= 97) && (str[0] <= 102)){
+    p1 = (str[0] - 87) * 16;
+  }
+
+  if((str[1] >= 48) && (str[1] <= 57)){
+    p2 = str[1] - 48;
+  }else if((str[1] >= 97) && (str[1] <= 102)){
+    p2 = str[1] - 87;
+  }
+  return (p1 + p2);
 }
 
 String getContentType(String filename) { // convert the file extension to the MIME type
@@ -548,6 +541,7 @@ String getContentType(String filename) { // convert the file extension to the MI
   else if (filename.endsWith(".css")) return "text/css";
   else if (filename.endsWith(".js")) return "application/javascript";
   else if (filename.endsWith(".ico")) return "image/x-icon";
+  else if (filename.endsWith(".json")) return "application/json";
   return "text/plain";
 }
 
@@ -590,8 +584,18 @@ void loadConfigurator(const char* filename, Config &config){
     Serial.println("deserialization");
     if(error) Serial.println("Failed to read file, using default config");
     strlcpy(config.host,doc["hostname"]|"aqua",sizeof(config.host));
-    strlcpy(config.pass,doc["pass"]|"senha123",sizeof(config.pass));
-    strlcpy(config.user,doc["user"]|"root",sizeof(config.user));
+    strlcpy(config.pass,doc["pass"]|"admin123",sizeof(config.pass));
+    strlcpy(config.user,doc["user"]|"admin",sizeof(config.user));
+    config.ip = doc["ip"];
+    Serial.println("IP config:");
+    IPAddress _ip(config.ip);
+    Serial.println(_ip);
+    config.gw = doc["gw"];
+    config.sn = doc["sn"];
+    config.pump = doc["Pump"];
+    config.led = doc["Led"];
+    config.programas = doc["pgr"];
+    config.horarios = doc["hr"];
     file.close();
     Serial.println("close file");
     SPIFFS.end();
@@ -600,7 +604,9 @@ void loadConfigurator(const char* filename, Config &config){
 
 }
 
-void saveConfig(const char* filename, Config &config){
+void saveConfig(const char* filename, Config &conf){
+
+  Config dados = conf;
   
   if(SPIFFS.begin()){
     Serial.println("mount File system....");
@@ -615,9 +621,16 @@ void saveConfig(const char* filename, Config &config){
       return;
     }
     StaticJsonDocument<256> doc;
-    doc["hostname"] = config.host;
-    doc["pass"] = config.pass;
-    doc["user"] = config.user;
+    doc["hostname"] = dados.host;
+    doc["pass"] = dados.pass;
+    doc["user"] = dados.user;
+    doc["ip"] = dados.ip;
+    doc["gw"] = dados.gw;
+    doc["sn"] = dados.sn;
+    doc["Pump"] = dados.pump;
+    doc["Led"] = dados.led;
+    doc["pgr"] = dados.programas;
+    doc["hr"] = dados.horarios;
     if(serializeJson(doc,file) == 0){
       Serial.println("Failed to write file");
     }

@@ -3,59 +3,73 @@
     <head>
         
         <title>LED RGB</title>
+        <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link href="st.css" rel="stylesheet"> 
-        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+        <link rel="manifest" href="/site.webmanifest">
+        <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+        <meta name="msapplication-TileColor" content="#da532c">
+        <meta name="theme-color" content="#ffffff">
+
         <script src="scp.js"></script>
     </head>
+    
+    <header class="header">
+            
+        <div class="menu">
+         <p class="ativo"><img src="icone.png" alt="logo"></p>
+         <div id="meuMenu">
+            <ul>
+                <li><a href="index.htm">Inicio</a></li>
+                <li><a href="confi.htm">Programar Bomba</a></li>
+                <li><a href="led.htm">Programar Led</a></li>
+                <li><a href="set.htm">Configuração</a></li>
+            </ul>
+        </div>
+        <a href="#" class="icon" onclick="myFunction()">
+            <hr><hr><hr>
+        </a>
+        </div>
+        </header>
+
     <body>
+        
         <div class="top" id="menu">
-            <h3><span lang="en">Aqua Control</span></h3>
-            <form name="relogio">
-                <input id="relogio" type="text" name="relogio" size="10" readonly="true">
-            </form>
+            <h1>Aqua Control</h1>
             <p id="valor"></p>
         </div>
-        <div>
-            <input type="color" id="selector"/>
+
+        <div  id="led">
+            <input type="color" id="ledColor"/>
         </div>
 
         <div id="bomb" >
         <div id="btn">
-            <input type="button" class="btn" id="setPump" value="Bomba Manual" onclick="setPump()">
-            <br><br>
-            <label class="text">Bomba Auto<br>
+            <ul class="acionar">
+            <li>
+        <div id="controleBomba">       
+            <label class="text" >Bomba</label>
+        </div>
+            <div>
             <label class="switch">
                 <input type="checkbox" id="pump">
                 <span class="slider round"></span>
-            </label></label>
-        </div>
-        <div id="_relogio">
-            <label>Hor&aacute;rio Ligar</label><br>
-            <label><input class="hour" id="set_relog" type="number" min="00" max="23" value="00">
-                :<input class="min" id="set_relog" type="number" min="00" max="59" value="00">
-                :<input class="sec" id="set_relog" type="number" min="00" max="59" value="00"></label> 
-            <br><br><br>
-            <label>Hor&aacute;rio Desligar</label><br>
-            <label><input class="hour1" id="set_relog" type="number" min="00" max="23" value="00">
-                :<input class="min1" id="set_relog" type="number" min="00" max="59" value="00">
-                :<input class="sec1" id="set_relog" type="number" min="00" max="59" value="00"></label>
-        </div>
-        <div>
-        </div><br><br><br>
-           <div id="btn">
-            <label class="text">Led Auto<br>
-            <label class="switch">
-                <input type="checkbox" id="auto">
-                <span class="slider round"></span>
-              </label></label><br><br>
-              <label class="text">Tempo: 0.1s..................5s<br>
-                <input type="range" id="myRange" min="100" max="5000" value="1000">
             </label>
         </div>
+        </li>
+        </ul>
         </div>
+        </div>
+
         <div class="footer">
-            <h5>Automa&ccedil;&atilde;o 2020</h5>
+        <div>
+            <h5>Automação 2020</h5>
+        </div>
         </div>
     </body>
 </html>
