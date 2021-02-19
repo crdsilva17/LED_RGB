@@ -7,11 +7,6 @@
 
 var stsLed;
 var stsPump;
-var programas;
-var horarios;
-var ip;
-var gw;
-var sn;
 
 //Função de Inicialização
 function init(){
@@ -46,7 +41,7 @@ function init(){
         }
     };
 
-    xh.open("GET", "config.json", true); //Solicita abertura do arquivo de configuração
+    xh.open("GET", "update", true); //Solicita abertura do arquivo de configuração
     xh.send();
     if(ledPanel != null){   //Caso painel de led exista
       ledPanel.addEventListener("input", function(){handlerLed()},false); //Monitora evento de mudança na entrada de cor

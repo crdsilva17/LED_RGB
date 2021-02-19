@@ -23,7 +23,7 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <FS.h>
-#include <LittleFS.h>
+//#include <LittleFS.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266HTTPUpdateServer.h>
 #include <WiFiUdp.h>
@@ -43,11 +43,6 @@
 
 const char* update_path = "/firmware"; /*!< Path for update*/
 const char* filename = "/setting.json";
-String dias_da_Semana [7] = {"Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"};
-bool progs [5][7] = {{false,false,false,false,false,false,false}, {false,false,false,false,false,false,false},
-                     {false,false,false,false,false,false,false}, {false,false,false,false,false,false,false},
-                     {false,false,false,false,false,false,false}};
-String hors [5][2] = {{"null","null"},{"null","null"},{"null","null"},{"null","null"},{"null","null"}};
 bool pumpAuto = false; /*!< store status pump auto*/
 bool shouldSave = false;
 unsigned long setTime = 1000; /*!< set time delay */
@@ -58,11 +53,11 @@ int pinR = 12; /*!< Set pin red as number 12 */
 int pinG = 13; /*!< Set pin green as number 13 */
 int pinB = 14; /*!< Set pin blue as number 14 */
 int pump = 5; ///< define pin of pump
-int sunLight = 4; /// define ldr sensor
+int btnPump = 4; /// define ldr sensor   
 int prog = 0;  //Define program run
 String page = ""; /*!< Store page HTML */
-String hora = ""; /*!< Store ntp time */
-String dia = ""; /*!< Store day of week */
+String agora = ""; /*!< Store ntp time */
+int hoje = 0; /*!< Store day of week */
 String ledStatus = ""; // Store status of led
 
 
@@ -150,9 +145,10 @@ struct Config{
   char user[20]; /*!< username for login*/
   char pass[16]; /*!< paasword for access*/
   char host[20]; /*!< hostname for local access*/
-  uint32_t ip;
-  uint32_t gw;
-  uint32_t sn;
+  uint32_t ip = 1921680112;
+  uint32_t gw = 19216801;
+  uint32_t sn = 2552552550;
+  int count = 0;
   bool pump;
   char led[16];
   bool programas [5][7];
@@ -306,6 +302,9 @@ void handleUpdate();
 void strTochar(String str, char * carc);
 
 
+void handleProgramador();
+
+
 /**
  * @class IPAddressParameter : public WiFiManagerParameter
  * @brief Classe conforme descrito na bibliote WiFimanage
@@ -339,7 +338,6 @@ void setup() {
   Serial.begin(9600);
 
   loadConfigurator(filename, config);
-  Serial.println("Prepair parameters");
   
   //Parameters of setting
   WiFiManagerParameter custom_hostname("host","hostname",config.host,sizeof(config.host));
@@ -361,13 +359,13 @@ void setup() {
   _ip = config.ip;
   _gw = config.gw;
   _sn = config.sn;
+  
   wifimanager.setSTAStaticIPConfig(_ip, _gw, _sn);
 
     String mac ="_";
     mac += WiFi.macAddress();
     mac = config.host + mac;
     if(!wifimanager.autoConnect(mac.c_str(), config.pass)){
-      Serial.println("Failed to connect");
       delay(3000);
       ESP.reset();
       delay(5000);
@@ -397,7 +395,7 @@ void setup() {
   pinMode(pinG, OUTPUT); /* Set pin green as Output */
   pinMode(pinB, OUTPUT); /* Set pin blue as Output */
   pinMode(pump, OUTPUT); /* Set pin pump as Output */
-  pinMode(sunLight, INPUT); /* Set pin sensor sun as Input */
+  pinMode(btnPump, INPUT); /* Set pin sensor sun as Input */
 
   digitalWrite(pump, LOW); /* Turn pump to off */
   digitalWrite(pinR,LOW); /* Turn off pin red */
@@ -406,9 +404,6 @@ void setup() {
 
   analogWriteRange(255); // 8 bits resolution
   analogWriteFreq(1000); // 1khz frequency
-
-  Serial.println("Connected.");
-  Serial.println(WiFi.localIP().toString());
   
   serverA.on("/", [](){
     //handleRoot(); 
@@ -421,6 +416,8 @@ void setup() {
   serverA.on("/pump", handleActionPump);
 
   serverA.on("/led", handleActionLed);
+  
+  serverA.on("/programa", handleProgramador);
 
   serverA.onNotFound([]() {                              // If the client requests any URI
     if (!handleFileRead(serverA.uri()))                  // send it if it exists
@@ -467,8 +464,8 @@ void timeClock(){
   if((currentTime - previusTimes) > 1000L){
     previusTimes = currentTime;
     ntp.update();
-    hora = ntp.getFormattedTime();
-    dia = dias_da_Semana[ntp.getDay()];
+    agora = ntp.getFormattedTime();
+    hoje = ntp.getDay();
   }
 }
 
@@ -483,7 +480,32 @@ void led(RGB colorname){
 
 void handleUpdate(){
     // Envia atualização de páginas
-    serverA.send(200,"application/json", filename);
+    if (!handleFileRead(filename))                  // send it if it exists
+      serverA.send(404, "text/plain", "404: Not Found");
+}
+
+void handleProgramador(){
+  
+  if(serverA.argName(0).equals("prog")){
+    StaticJsonDocument<1024> doc;
+    DeserializationError error = deserializeJson(doc, serverA.arg(0));
+    if(error) Serial.println("Failed to read file, using default config");
+    copyArray(doc["pgr"], config.programas);
+  }
+  if(serverA.argName(1).equals("hora")){
+    StaticJsonDocument<1024> doc;
+    DeserializationError error = deserializeJson(doc, serverA.arg(1));
+    if(error) Serial.println("Failed to read file, using default config");
+    copyArray(doc["hr"], config.horarios);
+  }
+  if(serverA.argName(2).equals("count")){
+    StaticJsonDocument<1024> doc;
+    DeserializationError error = deserializeJson(doc, serverA.arg(2));
+    if(error) Serial.println("Failed to read file, using default config");
+    config.count = doc["count"];
+  }
+  saveConfig(filename, config);
+  serverA.send(200, "text/plain","");
 }
 
 /**
@@ -506,7 +528,6 @@ void handleActionPump(){
 void handleActionLed(){
   //ativar led
   if(serverA.argName(0).equals("color")){
-    Serial.println(serverA.arg(0));
     color.r = strToByte(serverA.arg(0).substring(1,3)); // get red color 
     color.g = strToByte(serverA.arg(0).substring(3,5)); // get green color 
     color.b = strToByte(serverA.arg(0).substring(5));   // get blue color
@@ -554,7 +575,6 @@ String getContentType(String filename) { // convert the file extension to the MI
 }
 
 bool handleFileRead(String path) { // send the right file to the client (if it exists)
-  Serial.println("handleFileRead: " + path);
   if (path.endsWith("/")) path += "index.htm";         // If a folder is requested, send the index file
   String contentType = getContentType(path);            // Get the MIME type
   if(SPIFFS.begin()){
@@ -567,45 +587,36 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
   }
   SPIFFS.end();
   }
-  Serial.println("\tFile Not Found");
-  Serial.println(path);
   return false;                                         // If the file doesn't exist, return false
 }
 
 void loadConfigurator(const char* filename, Config &config){
 
   if(SPIFFS.begin()){
-    Serial.println("mount File system.....");
     File file;
     if(SPIFFS.exists(filename)){
-      Serial.println("file found!!!");
       file = SPIFFS.open(filename, "r");
-      Serial.println("readinng file....");
     }else{
-      Serial.println("file not found!!  Create");
       file = SPIFFS.open(filename,"w");
     }
     
-    StaticJsonDocument<256> doc;
-    Serial.println("doc create");
+    StaticJsonDocument<2048> doc;
     DeserializationError error = deserializeJson(doc,file);
-    Serial.println("deserialization");
     if(error) Serial.println("Failed to read file, using default config");
     strlcpy(config.host,doc["hostname"]|"aqua",sizeof(config.host));
     strlcpy(config.pass,doc["pass"]|"admin123",sizeof(config.pass));
     strlcpy(config.user,doc["user"]|"admin",sizeof(config.user));
+    config.count = doc["count"];
     config.ip = doc["ip"];
     IPAddress _ip(config.ip);
     config.gw = doc["gw"];
     config.sn = doc["sn"];
     config.pump = doc["Pump"];
-    strlcpy(config.led, doc["Led"], sizeof(config.led));
+    strlcpy(config.led, doc["Led"]|"000", sizeof(config.led));
     copyArray(doc["pgr"],config.programas);
     copyArray(doc["hr"], config.horarios);
     file.close();
-    Serial.println("close file");
     SPIFFS.end();
-    Serial.println("end System file");
   }
 
 }
@@ -615,18 +626,16 @@ void saveConfig(const char* filename, Config &conf){
   Config dados = conf;
   
   if(SPIFFS.begin()){
-    Serial.println("mount File system....");
     if(SPIFFS.exists(filename)){
       SPIFFS.remove(filename);
     }
-    Serial.println("Create file");
     File file = SPIFFS.open(filename,"w");
     if(!file){
-      Serial.println("Failed to create file");
       SPIFFS.end();
       return;
     }
-    StaticJsonDocument<256> doc;
+    Serial.println("Criando DOC..");
+    StaticJsonDocument<4096> doc;
     doc["hostname"] = dados.host;
     doc["pass"] = dados.pass;
     doc["user"] = dados.user;
@@ -635,17 +644,21 @@ void saveConfig(const char* filename, Config &conf){
     doc["sn"] = dados.sn;
     doc["Pump"] = dados.pump;
     doc["Led"] = dados.led;
+    doc["count"] = dados.count;
+    Serial.println("Anexando pgr");
     copyArray(dados.programas, doc["pgr"]);
+    Serial.println("Anexando hr");
     copyArray(dados.horarios, doc["hr"]);
+    Serial.println("Serializando...");
     if(serializeJson(doc,file) == 0){
-      Serial.println("Failed to write file");
+      Serial.println("Error!");
     }
+    Serial.println("Concluido!");
     file.close();
     SPIFFS.end();
   }
 }
 
 void saveCallbackConfig(){
-  Serial.println("set save flag true");
   shouldSave = true;
 }
