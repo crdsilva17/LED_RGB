@@ -23,7 +23,6 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <FS.h>
-//#include <LittleFS.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266HTTPUpdateServer.h>
 #include <WiFiUdp.h>
@@ -58,7 +57,8 @@ int prog = 0;  //Define program run
 String page = ""; /*!< Store page HTML */
 String agora = ""; /*!< Store ntp time */
 int hoje = 0; /*!< Store day of week */
-String ledStatus = ""; // Store status of led
+
+ DynamicJsonDocument doc(8192);
 
 
 /******************************************************************
@@ -108,7 +108,7 @@ WiFiUDP ntpUDP;
  * @brief create client ntp
  * 
  * */
-NTPClient ntp(ntpUDP,"b.st1.ntp.br", -3 * 3600);
+NTPClient ntp(ntpUDP,"a.st1.ntp.br", -3 * 3600, 60000);
 
 /**
  * @struct RGB 
@@ -145,22 +145,21 @@ struct Config{
   char user[20]; /*!< username for login*/
   char pass[16]; /*!< paasword for access*/
   char host[20]; /*!< hostname for local access*/
-  uint32_t ip = 1921680112;
-  uint32_t gw = 19216801;
-  uint32_t sn = 2552552550;
+  IPAddress ip = {192,168,0,112};
+  IPAddress gw = {192,168,0,1};
+  IPAddress sn = {255,255,255,0};
+  RGB corLed = {0,0,0};
   int count = 0;
-  bool pump;
+  bool pump = false;
+  bool dhcp = true;
+  bool sun = false;
   char led[16];
   bool programas [5][7];
   String horarios [5][2];
+  int speed = 10;
 }config;
 
-IPAddress _ip(config.ip);
-IPAddress _gw(config.gw);
-IPAddress _sn(config.sn);
 
-//Config config;
-RGB color = {0,0,0};/*!< object RGB color */
 
 
 /***********************************************
@@ -304,24 +303,13 @@ void strTochar(String str, char * carc);
 
 void handleProgramador();
 
+void handleIp();
 
-/**
- * @class IPAddressParameter : public WiFiManagerParameter
- * @brief Classe conforme descrito na bibliote WiFimanage
- * 
- * @return IPAddress ip
- * */
-class IPAddressParameter : public WiFiManagerParameter {
-public:
-    IPAddressParameter(const char *id, const char *placeholder, IPAddress address)
-        : WiFiManagerParameter("") {
-        init(id, placeholder, address.toString().c_str(), 16, "", WFM_LABEL_BEFORE);
-    }
+void sequenciaLed();
+void aleatorioLed();
+void dimmerLed();
 
-    bool getValue(IPAddress &ip) {
-        return ip.fromString(WiFiManagerParameter::getValue());
-    }
-};
+void handleReset();
 
 
 /********************************************
@@ -335,7 +323,7 @@ public:
  * */
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600);
+ // Serial.begin(9600);
 
   loadConfigurator(filename, config);
   
@@ -343,9 +331,9 @@ void setup() {
   WiFiManagerParameter custom_hostname("host","hostname",config.host,sizeof(config.host));
   WiFiManagerParameter custom_pass("pass","password",config.pass, sizeof(config.pass));
   WiFiManagerParameter custom_user("user","username",config.user, sizeof(config.user));
-  IPAddressParameter   custom_ip("ip", "Static IP", _ip);
-  IPAddressParameter   custom_gw("gw", "Gateway", _gw);
-  IPAddressParameter   custom_sn("sn", "Sub-Mask", _sn);
+  WiFiManagerParameter custom_ip("ip", "Static IP", config.ip.toString().c_str(), 16);
+  WiFiManagerParameter custom_gw("gw", "Gateway", config.gw.toString().c_str(), 16);
+  WiFiManagerParameter custom_sn("sn", "Sub-Mask", config.sn.toString().c_str(), 16);
 
 
   wifimanager.setSaveConfigCallback(saveCallbackConfig);
@@ -356,11 +344,9 @@ void setup() {
   wifimanager.addParameter(&custom_ip);
   wifimanager.addParameter(&custom_gw);
   wifimanager.addParameter(&custom_sn);
-  _ip = config.ip;
-  _gw = config.gw;
-  _sn = config.sn;
   
-  wifimanager.setSTAStaticIPConfig(_ip, _gw, _sn);
+  if(config.dhcp)
+    wifimanager.setSTAStaticIPConfig(config.ip, config.gw, config.sn);
 
     String mac ="_";
     mac += WiFi.macAddress();
@@ -376,17 +362,9 @@ void setup() {
     strcpy(config.pass,custom_pass.getValue());
     strcpy(config.user,custom_user.getValue());
 
-    if(custom_ip.getValue(_ip)){
-      config.ip = _ip;
-    }
-
-    if(custom_gw.getValue(_gw)){
-      config.gw = _gw;
-    }
-
-    if(custom_sn.getValue(_sn)){
-      config.sn = _sn;
-    }
+    config.ip.fromString(custom_ip.getValue());
+    config.gw.fromString(custom_gw.getValue());
+    config.sn.fromString(custom_sn.getValue());
 
     saveConfig(filename,config);
 
@@ -397,7 +375,7 @@ void setup() {
   pinMode(pump, OUTPUT); /* Set pin pump as Output */
   pinMode(btnPump, INPUT); /* Set pin sensor sun as Input */
 
-  digitalWrite(pump, LOW); /* Turn pump to off */
+  digitalWrite(pump, HIGH); /* Turn pump to off */
   digitalWrite(pinR,LOW); /* Turn off pin red */
   digitalWrite(pinG,LOW); /* Turn off pin green */
   digitalWrite(pinB,LOW); /* Turn off pin blue */
@@ -416,8 +394,12 @@ void setup() {
   serverA.on("/pump", handleActionPump);
 
   serverA.on("/led", handleActionLed);
+
+  serverA.on("/meuIp", handleIp);
   
   serverA.on("/programa", handleProgramador);
+
+  serverA.on("/reset", handleReset);
 
   serverA.onNotFound([]() {                              // If the client requests any URI
     if (!handleFileRead(serverA.uri()))                  // send it if it exists
@@ -440,6 +422,24 @@ void loop() {
   serverA.handleClient();
   MDNS.update();
   timeClock();
+
+  String str(config.led);
+  float h = agora.substring(0, agora.indexOf(":")).toFloat() + (agora.substring(agora.indexOf(":")+1,agora.indexOf(":",agora.indexOf(":")+1)).toFloat()/60);
+  
+  if((config.sun == false) || (h >= 17.5)||(h <= 5.99)){
+  if(str.indexOf("sequencia") > -1){
+    sequenciaLed();
+  }else if(str.indexOf("aleatorio") > -1){
+    aleatorioLed();
+  }else if(str.indexOf("dimmer") > -1){
+    dimmerLed();
+  }
+  }else{
+    if(!str.indexOf("manual")> -1){
+      config.corLed = {0,0,0};
+      led(config.corLed);
+    }
+  }
 
 }
 /**
@@ -467,6 +467,41 @@ void timeClock(){
     agora = ntp.getFormattedTime();
     hoje = ntp.getDay();
   }
+  serverA.handleClient();
+  
+  //Verificar Programa para controle automático da bomba
+  if(config.count > 0){ //caso exista programa
+   bool oldPump = config.pump;
+   float hp, hp1, ha;
+   float mp, mp1, ma;
+   String aux;
+    for(int i=0; i<config.count; i++){ //cria loop para ler todos os programas
+      if(config.programas[i][hoje]){   // Compara se dia atual esta habilitado
+        hp = config.horarios[i][0].substring(0, config.horarios[i][0].indexOf(":")).toFloat();
+        hp1 = config.horarios[i][1].substring(0, config.horarios[i][1].indexOf(":")).toFloat();
+        mp = config.horarios[i][0].substring(config.horarios[i][0].indexOf(":") + 1).toFloat();
+        mp1 = config.horarios[i][1].substring(config.horarios[i][1].indexOf(":") + 1).toFloat();
+        hp += mp/60;
+        hp1 += mp1/60;
+        ha = agora.substring(0, agora.indexOf(":")).toFloat();
+        ma = agora.substring(agora.indexOf(":")+1,agora.indexOf(":",agora.indexOf(":")+1)).toFloat();
+        ha += ma/60;
+        if(hp <= ha && hp1> ha){ // Verifica se horário atual esta no intervalo de bomba ligada
+          digitalWrite(pump, LOW);   // Liga bomba
+          config.pump = true;        // Atualiza variavel que indica estado da bomba
+          pumpAuto = true;           // indica que a bomba opera em modo automático
+        }else if(hp1<= ha && pumpAuto){  // verifica se esta na hora de desligar bomba
+          digitalWrite(pump,HIGH); // Desliga bomba;
+          config.pump = false;   // Atualiza variavel que indica estado da bomba.
+          pumpAuto = false;     //Indica que a bomba deixou o modo automático.
+        }
+      }
+    }
+    if(oldPump != config.pump){ //Salva apenas se valor mudar
+    //atualiza arquivo Json
+    saveConfig(filename, config); 
+    }
+  }
 }
 
 /**
@@ -478,28 +513,224 @@ void led(RGB colorname){
   analogWrite(pinB,colorname.b);
 }
 
+void sequenciaLed(){
+  config.corLed = {255, 0, 0};
+  int i = 0;
+  for(i = 0; i <= 255; i++){
+    config.corLed.b = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i = 255; i>= 0; i--){
+    config.corLed.r = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i = 0; i<=255; i++){
+    config.corLed.g = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i = 255; i>=0; i--){
+    config.corLed.b = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i = 0; i <= 255; i++){
+    config.corLed.r = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i = 255; i>=0; i--){
+    config.corLed.g = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+}
+
+void aleatorioLed(){
+  randomSeed(random(256));
+  config.corLed.r = random(256);
+  config.corLed.g = random(256);
+  config.corLed.b = random(256);
+  led(config.corLed);
+  delay(config.speed);
+}
+
+void dimmerLed(){
+  int i = 0;
+  for(i = 0; i<=255; i++){
+    config.corLed.r = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i=0; i<=255; i++){
+    config.corLed.g = i;
+    config.corLed.b = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i=255; i>=0; i--){
+    config.corLed.r = i;
+    config.corLed.g = i;
+    config.corLed.b = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i=0; i<=255; i++){
+    config.corLed.r = i;
+    config.corLed.b = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i = 0; i<=255; i++){
+    config.corLed.g = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i=255; i>=0; i--){
+    config.corLed.r = i;
+    config.corLed.g = i;
+    config.corLed.b = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i = 0; i<=255; i++){
+    config.corLed.b = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i=0; i<=255; i++){
+    config.corLed.r = i;
+    config.corLed.g = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i=255; i>=0; i--){
+    config.corLed.r = i;
+    config.corLed.g = i;
+    config.corLed.b = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i=0; i<=255; i++){
+    config.corLed.b = i;
+    config.corLed.g = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i = 0; i<=255; i++){
+    config.corLed.r = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i=255; i>=0; i--){
+    config.corLed.r = i;
+    config.corLed.g = i;
+    config.corLed.b = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i = 0; i<=255; i++){
+    config.corLed.g = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i=0; i<=255; i++){
+    config.corLed.b = i;
+    config.corLed.r = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i=255; i>=0; i--){
+    config.corLed.r = i;
+    config.corLed.g = i;
+    config.corLed.b = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i=0; i<=255; i++){
+    config.corLed.g = i;
+    config.corLed.r = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i = 0; i<=255; i++){
+    config.corLed.b = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+  for(i=255; i>=0; i--){
+    config.corLed.r = i;
+    config.corLed.g = i;
+    config.corLed.b = i;
+    led(config.corLed);
+    timeClock();
+    delay(config.speed);
+  }
+
+}
+
 void handleUpdate(){
     // Envia atualização de páginas
     if (!handleFileRead(filename))                  // send it if it exists
       serverA.send(404, "text/plain", "404: Not Found");
 }
 
+void handleIp(){
+  if(serverA.argName(0).equals("meuip")){
+    StaticJsonDocument<1024> doc1;
+    deserializeJson(doc1,serverA.arg(0));
+    for(int i = 0; i<4; i++){
+    config.ip[i] = doc1["ip"][i];
+    config.gw[i] = doc1["gw"][i];
+    config.sn[i] = doc1["sn"][i];
+    }
+    config.dhcp = doc1["dhcp"];
+    saveConfig(filename, config);
+    serverA.send(200, "text/plain","");
+  }
+}
+
 void handleProgramador(){
   
   if(serverA.argName(0).equals("prog")){
-    StaticJsonDocument<1024> doc;
+    ///StaticJsonDocument<1024> doc;
     DeserializationError error = deserializeJson(doc, serverA.arg(0));
     if(error) Serial.println("Failed to read file, using default config");
     copyArray(doc["pgr"], config.programas);
   }
   if(serverA.argName(1).equals("hora")){
-    StaticJsonDocument<1024> doc;
+    ///StaticJsonDocument<1024> doc;
     DeserializationError error = deserializeJson(doc, serverA.arg(1));
     if(error) Serial.println("Failed to read file, using default config");
     copyArray(doc["hr"], config.horarios);
   }
   if(serverA.argName(2).equals("count")){
-    StaticJsonDocument<1024> doc;
+    ///StaticJsonDocument<1024> doc;
     DeserializationError error = deserializeJson(doc, serverA.arg(2));
     if(error) Serial.println("Failed to read file, using default config");
     config.count = doc["count"];
@@ -515,32 +746,60 @@ void handleActionPump(){
     //ativar bomba
     if(serverA.argName(0).equals("setPump")){
       if(serverA.arg(0).equals("on")){
-        digitalWrite(pump, HIGH);
-        config.pump = true;
-      }else if(serverA.arg(0).equals("off")){
         digitalWrite(pump, LOW);
+        config.pump = true;
+        pumpAuto = false;
+      }else if(serverA.arg(0).equals("off")){
+        digitalWrite(pump, HIGH);
         config.pump = false;
       }
     }
+    serverA.send(200,"text/plain","");
     saveConfig(filename, config);
   }
 
 void handleActionLed(){
   //ativar led
-  if(serverA.argName(0).equals("color")){
-    color.r = strToByte(serverA.arg(0).substring(1,3)); // get red color 
-    color.g = strToByte(serverA.arg(0).substring(3,5)); // get green color 
-    color.b = strToByte(serverA.arg(0).substring(5));   // get blue color
-    led(color);
-    
+  if(serverA.argName(0).equals("cor")){
+    config.corLed.r = strToByte(serverA.arg(0).substring(1,3)); // get red color 
+    config.corLed.g = strToByte(serverA.arg(0).substring(3,5)); // get green color 
+    config.corLed.b = strToByte(serverA.arg(0).substring(5));   // get blue color
+    led(config.corLed);
   }else if(serverA.argName(0).equals("estado")){
-    ledStatus = serverA.arg(0);
-    strTochar(ledStatus, config.led);
-    saveConfig(filename, config);
-  }
+    strTochar(serverA.arg(0), config.led);
+    config.speed = serverA.arg(1).toInt();
+  }else if(serverA.argName(0).equals("sun")){
+    if(serverA.arg(0).equals("0")){
+      config.sun = false;
+    }else if(serverA.arg(0).equals("1")){
+      config.sn = true;
+    }
+  } 
+  serverA.send(200, "text/plain","");
+  saveConfig(filename, config);
 
 }
 
+//Trata as ações de reset do módulo
+void handleReset(){
+  if(serverA.argName(0).equals("reset")){ // Verifica nome de dados recebidos
+    if(serverA.arg(0).equals("again")){ // Aqui reinicia módulo mantendo dados
+      serverA.send(200, "text/plain","Reset Device...");
+      delay(1000);
+      ESP.reset();
+      delay(1000);
+    }else if(serverA.arg(0).equals("default")){ // Aqui reinicia módulo ao padrão de fábrica
+      serverA.send(200,"text/plain", "Default Reset....");
+      delay(1000);
+      wifimanager.resetSettings();
+      if(SPIFFS.remove(filename)) Serial.println("Arquivos Deletados");
+      ESP.reset();
+      delay(1000);
+    }
+  }
+}
+
+///Converte String para Caracter
 void strTochar(String str, char * carc){
   for(int i = 0; i < str.length(); i++){
     carc[i] = str[i];
@@ -584,43 +843,58 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
     file.close(); 
     SPIFFS.end();                                      // Then close the file again
     return true;
+  }else{
+    path += ".gz";
+    File file = SPIFFS.open(path, "r");                 // Open it
+    size_t sent = serverA.streamFile(file, contentType); // And send it to the client
+    file.close(); 
+    SPIFFS.end();                                      // Then close the file again
+    return true;
   }
   SPIFFS.end();
   }
   return false;                                         // If the file doesn't exist, return false
 }
 
+///Carrega configurações previamente salvas
 void loadConfigurator(const char* filename, Config &config){
 
-  if(SPIFFS.begin()){
+  if(SPIFFS.begin()){ ///inicializa sistema de arquivos
     File file;
-    if(SPIFFS.exists(filename)){
-      file = SPIFFS.open(filename, "r");
+    if(SPIFFS.exists(filename)){ // Verifica existencia de arquivo
+      file = SPIFFS.open(filename, "r");  //Existindo abre em modo de leitura
     }else{
-      file = SPIFFS.open(filename,"w");
+      file = SPIFFS.open(filename,"w"); /// caso contrário cria arquivo para escrita de valores.
     }
-    
-    StaticJsonDocument<2048> doc;
-    DeserializationError error = deserializeJson(doc,file);
+    DeserializationError error = deserializeJson(doc,file); // formata em modelo Json
     if(error) Serial.println("Failed to read file, using default config");
-    strlcpy(config.host,doc["hostname"]|"aqua",sizeof(config.host));
-    strlcpy(config.pass,doc["pass"]|"admin123",sizeof(config.pass));
-    strlcpy(config.user,doc["user"]|"admin",sizeof(config.user));
-    config.count = doc["count"];
-    config.ip = doc["ip"];
-    IPAddress _ip(config.ip);
-    config.gw = doc["gw"];
-    config.sn = doc["sn"];
-    config.pump = doc["Pump"];
-    strlcpy(config.led, doc["Led"]|"000", sizeof(config.led));
-    copyArray(doc["pgr"],config.programas);
-    copyArray(doc["hr"], config.horarios);
+    strlcpy(config.host,doc["hostname"]|"aqua",sizeof(config.host)); //Grava dados de hostname,
+    strlcpy(config.pass,doc["pass"]|"admin123",sizeof(config.pass)); // Senha de acesso para atualização,
+    strlcpy(config.user,doc["user"]|"admin",sizeof(config.user));    // nome de usuário,
+    strlcpy(config.led, doc["Led"]|"manual", sizeof(config.led));   // estado do Led,
+    config.count = doc["count"];  ///Quantidades de programas,
+    for(int i = 0; i<4; i++){     /// IP, Gateway, Sub-Rede,
+    config.ip[i] = doc["ip"][i];
+    config.gw[i] = doc["gw"][i];
+    config.sn[i] = doc["sn"][i];
+    }
+    config.sun = doc["sun"];
+    config.speed = doc["delay"]|10; //atualiza velocidade de transição na cor dos leds
+    config.dhcp = doc["dhcp"]|true; // dados de dhcp manual ou automático,
+    config.pump = doc["Pump"];      // estado da bomba (on ou Off),
+    config.corLed.r = doc["cor_r"];  ///intenciadade da cor vermelha no led,
+    config.corLed.g = doc["cor_g"]; //intencidade da cor verde no led,
+    config.corLed.b = doc["cor_b"]; //intencidade da cor azul no led,
+    copyArray(doc["pgr"],config.programas); // Programações da bomba e 
+    copyArray(doc["hr"], config.horarios);   // horarios de ativação da bomba.
     file.close();
     SPIFFS.end();
   }
 
 }
 
+
+//Salva dados de configuração do módulo
 void saveConfig(const char* filename, Config &conf){
 
   Config dados = conf;
@@ -634,26 +908,29 @@ void saveConfig(const char* filename, Config &conf){
       SPIFFS.end();
       return;
     }
-    Serial.println("Criando DOC..");
-    StaticJsonDocument<4096> doc;
+   /// StaticJsonDocument<2048> doc;
     doc["hostname"] = dados.host;
     doc["pass"] = dados.pass;
     doc["user"] = dados.user;
-    doc["ip"] = dados.ip;
-    doc["gw"] = dados.gw;
-    doc["sn"] = dados.sn;
+    for(int i = 0; i<4; i++){
+     doc["ip"][i] = dados.ip[i];
+     doc["gw"][i] = dados.gw[i];
+     doc["sn"][i] = dados.sn[i];
+    }
+    doc["delay"] = dados.speed;
+    doc["dhcp"] = dados.dhcp;
     doc["Pump"] = dados.pump;
+    doc["cor_r"] = dados.corLed.r;
+    doc["cor_g"] = dados.corLed.g;
+    doc["cor_b"] = dados.corLed.b;
     doc["Led"] = dados.led;
     doc["count"] = dados.count;
-    Serial.println("Anexando pgr");
+    doc["sun"] = dados.sun;
     copyArray(dados.programas, doc["pgr"]);
-    Serial.println("Anexando hr");
     copyArray(dados.horarios, doc["hr"]);
-    Serial.println("Serializando...");
     if(serializeJson(doc,file) == 0){
       Serial.println("Error!");
     }
-    Serial.println("Concluido!");
     file.close();
     SPIFFS.end();
   }

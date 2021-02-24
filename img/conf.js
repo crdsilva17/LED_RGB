@@ -5,7 +5,7 @@
  */
 var btn_add = document.querySelector("#btn-add");
 var local = document.querySelector("#local");
-var prog = [[false,false,false,false,false,false,false],[false,false,false,false,false,false,false],[false,false,false,false,false,false,false],[false,false,false,false,false,false,false],[false,false,false,false,false,false,false]];
+var prog = [];
 var hor = [5][2];
 var valor = 1;
 var MAX = 6;
@@ -55,16 +55,16 @@ function tableCreate(index){
 
 //Função de inicialização
 function init(){
-  let xh = new XMLHttpRequest();
+  var xh = new XMLHttpRequest();
 
     xh.onreadystatechange = function(){
         if (this.readyState == 4 && this.status == 200){
             // atualiza pagina aqui
-            console.log(this.responseText);
-            dadosJson = JSON.parse(this.responseText); // Recebe dados de atualização da página
+            //console.log(this.responseText);
+            var dadosJson = JSON.parse(this.responseText); // Recebe dados de atualização da página
             var obj = dadosJson.pgr;
             var obj2 = dadosJson.hr;
-            count = dadosJson.count;
+            count  = dadosJson.count;
 
             for(var i=0; i < count; i++){
               updateTabela();
@@ -75,10 +75,10 @@ function init(){
                   ch[j].checked = obj[i][j];
                 }
               var time = tab.querySelectorAll('input[type="time"]');
-              console.log(time);
+              //console.log(time);
               var l = 0;
                     for(var k=0; k<2; k++){
-                      console.log("time["+l+"] = obj2["+i+"]["+k+"] = "+obj2[i][k]);
+                      //console.log("time["+l+"] = obj2["+i+"]["+k+"] = "+obj2[i][k]);
                       time[l].value = obj2[i][k];
                       l++;
                     }
@@ -93,8 +93,8 @@ function init(){
 function save(){
   var checkId = document.querySelectorAll('input[type="checkbox"]');
   var tam = checkId.length / 7;
-  let xh = new XMLHttpRequest();
-  let formdata = new FormData();
+  var xh = new XMLHttpRequest();
+  var formdata = new FormData();
   setH = document.querySelectorAll('input[type="time"]');
   var k=0;
   var json = '{"pgr":[';
@@ -120,8 +120,8 @@ function save(){
     json2 += "[";
     for(var i=0; i<2; i++){
       json2 += '"';
-      console.log(k);
-      console.log(setH[k]);
+     // console.log(k);
+      //console.log(setH[k]);
       json2 += setH[k].value;
       k++;
       json2 += '"';
@@ -131,14 +131,25 @@ function save(){
   }
   json2 +="]}";
 
-  console.log("count: " + count);
-  var json3 = '{"count":' + count+'}' ;
+  //console.log("count: " + count);
+  var json3 = '{"count":' +count+'}' ;
   formdata.append("prog", json);
   formdata.append("hora",json2);
   formdata.append("count",json3)
-  for(item of formdata.entries()){
-    console.log(item[0] + ":" + item[1]);
+
+  xh.onreadystatechange = function(){
+    if(this.readyState == 4 && this.status == 200){
+      if(count > 1){
+        window.alert(count + " Programas Salvos!");
+      }else if(count < 1){
+        window.alert("Error ao Salvar o Programa!!!");
+      }else{
+        window.alert(count + " Programa Salvo!")
+      }
+    }
   }
+
+
   xh.open("POST", "programa", true);
   xh.send(formdata);
   
@@ -170,7 +181,7 @@ function delet(t){
           chEl[i].setAttribute("id",chEl[i].id.substr(0, chEl[i].id.indexOf(t+1)) + t);
         }
     }
-    console.log(tam);
+   //console.log(tam);
     switch(tam){
       case 1:
         prog.splice(0, 1);
@@ -190,7 +201,7 @@ function delet(t){
     }
 
     valor = valor - 1;
-    count = count -1;
+    if(count > 0) count = count -1;
     save();
 };
 
@@ -207,7 +218,7 @@ function criarTabela(event){
     prog[valor - 1] = table;
     valor = valor + 1;
     count = count + 1;
-    console.log(count);
+    //console.log(count);
     }
 };
 
@@ -217,7 +228,7 @@ function updateTabela(){
   table.init(); // inicializa tabela
   prog[valor - 1] = table;
   valor = valor + 1;
-  console.log(count);
+ // console.log(count);
   }
 };
 
