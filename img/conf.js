@@ -244,7 +244,9 @@ function myFunction() {
 
 //Main
 
-
+window.onload = function(){
+  document.querySelector("#loader").style.display = "none";
+}
 
 document.addEventListener("DOMContentLoaded", init, false);
 btn_add.addEventListener('click', criarTabela);

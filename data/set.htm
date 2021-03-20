@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
+    <title>Aqua Control</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="st.css">
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <script src="scp.js"></script>
-    <title>Configuração</title>
+    <script src="set.js"></script>
 </head>
 <body>
+    <div id="loader">
+        <h1>Carregando...</h1>
+    </div>
     <header class="header">   
         <div class="menu">
             <p class="ativo"><img src="icone.png" alt="logo"></p>
@@ -42,6 +45,23 @@
                 <input type="text" id="SR" minlength="7" maxlength="15" size="15" pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$"> <br>
                 </div>
             <input type="button" value="Salvar" onclick="saveDhcp()"> <input type="button" value="Cancelar" onclick="cancelDhcp()">
+        </fieldset>
+        <br>
+        <fieldset>
+            <legend>Horário</legend>
+            <label for="ntpServer">Servidor ntp</label>
+            <input type="text" name="ntpServer" id="ntpServer">
+
+            <label for="ntpPort">Porta</label>
+            <input type="number" name="ntpPort" id="ntpPort" min="1" max="65535" value="123" required>
+            
+            <label for="ntpTimezone">Timezone</label>
+            <input type="number" name="ntpTimezone" id="ntpTimezone" min="-12" max="12" value="-3">
+            
+            <label for="rAtual">Relógio</label>
+            <input type="time" name="relogioAtual" id="rAtual">
+        
+            <input type="button" value="Atualizar" onclick="update()"> <input type="button" value="Salvar" onclick="saveH()">
         </fieldset>
         <br>
         <fieldset>

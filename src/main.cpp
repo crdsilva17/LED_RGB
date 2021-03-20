@@ -33,18 +33,22 @@
  * DEFINES
  ******************************************************/
 
+#define SHOW_TIME_PERIOD 1000
+#define NTP_TIMEOUT 1500
 
 /**************************************************************
  * GLOBAL VARIABLES
  **************************************************************/
-
+int8_t timeZone = -3;
+int8_t minutesTimeZone = 0;
+int8_t ntpPort = 123;
+const PROGMEM char *ntpServer = "pool.ntp.org";
 
 
 const char* update_path = "/firmware"; /*!< Path for update*/
 const char* filename = "/setting.json";
 bool pumpAuto = false; /*!< store status pump auto*/
 bool shouldSave = false;
-unsigned long setTime = 1000; /*!< set time delay */
 unsigned long previusTime = 0; /*!< receive previus time for trigger delay */
 unsigned long previusTimes = 0; /*!< receive previus time for trigger delay ntp */
 File uploadFile; /*!< Store data for SPIFFS readed*/
@@ -103,12 +107,6 @@ int hoje = 0; /*!< Store day of week */
  * */
 WiFiUDP ntpUDP;
 
-/**
- * @class ntp
- * @brief create client ntp
- * 
- * */
-NTPClient ntp(ntpUDP,"a.st1.ntp.br", -3 * 3600, 60000);
 
 /**
  * @struct RGB 
@@ -145,19 +143,24 @@ struct Config{
   char user[20]; /*!< username for login*/
   char pass[16]; /*!< paasword for access*/
   char host[20]; /*!< hostname for local access*/
-  IPAddress ip = {192,168,0,112};
-  IPAddress gw = {192,168,0,1};
-  IPAddress sn = {255,255,255,0};
-  RGB corLed = {0,0,0};
-  int count = 0;
-  bool pump = false;
-  bool dhcp = true;
+  String ntpServ ="pool.ntp.org"; /*!< Server ntp */
+  int port = 123; /*!< Port value ntp>*/
+  int8_t zone = -3; /*!< timeZone ntp*/
+  IPAddress ip = {192,168,0,112}; /*!< Ip Address*/
+  IPAddress gw = {192,168,0,1}; /*!< Gateway Address*/
+  IPAddress sn = {255,255,255,0}; /*!< subnet address*/
+  RGB corLed = {0,0,0}; /*!< Struct RGB color*/
+  int count = 0;   /*!< store number of timer */
+  bool pump = false; /*!< state pump pool*/
+  bool dhcp = true; /*!< state of dhcp device*/
   bool sun = false;
   char led[16];
   bool programas [5][7];
   String horarios [5][2];
-  int speed = 10;
+  unsigned int speed = 10;
 }config;
+
+
 
 
 
@@ -298,18 +301,44 @@ int strToByte(String str);
  * */
 void handleUpdate();
 
+
+/**
+ * @fn strToChar(String str, char *carc)
+ * 
+ * @brief Convert string to character
+ * 
+ * @param str 
+ * @param carc 
+ */
 void strTochar(String str, char * carc);
 
-
+/**
+ * @brief Handler programmable timer  
+ * 
+ */
 void handleProgramador();
 
+
+/**
+ * @brief handler IP Address
+ * 
+ */
 void handleIp();
 
-void sequenciaLed();
-void aleatorioLed();
-void dimmerLed();
-
+/**
+ * @brief handler reset of device
+ * 
+ */
 void handleReset();
+
+
+ /**
+ * @class ntp
+ * @brief create client ntp
+ * 
+ * */
+ NTPClient ntp(ntpUDP, config.ntpServ.c_str(),config.zone * 3600);
+
 
 
 /********************************************
@@ -323,18 +352,30 @@ void handleReset();
  * */
 void setup() {
   // put your setup code here, to run once:
- // Serial.begin(9600);
+  Serial.begin(9600);
+  
+  
 
   loadConfigurator(filename, config);
-  
+  Serial.println(config.zone);
+
+  ntp.setTimeOffset(config.zone * 3600);
+ 
+
+
   //Parameters of setting
   WiFiManagerParameter custom_hostname("host","hostname",config.host,sizeof(config.host));
   WiFiManagerParameter custom_pass("pass","password",config.pass, sizeof(config.pass));
   WiFiManagerParameter custom_user("user","username",config.user, sizeof(config.user));
-  WiFiManagerParameter custom_ip("ip", "Static IP", config.ip.toString().c_str(), 16);
-  WiFiManagerParameter custom_gw("gw", "Gateway", config.gw.toString().c_str(), 16);
-  WiFiManagerParameter custom_sn("sn", "Sub-Mask", config.sn.toString().c_str(), 16);
+  WiFiManagerParameter custom_ip("ip", "Static IP",config.ip.toString().c_str(), 16);
+  WiFiManagerParameter custom_gw("gw", "Gateway",  config.gw.toString().c_str(), 16);
+  WiFiManagerParameter custom_sn("sn", "Sub-Mask",  config.sn.toString().c_str(), 16);
 
+  if(config.dhcp){
+   if(config.ip.toString().equals("(IP unset)")) config.ip = {192,168,0,112};
+   if(config.gw.toString().equals("(IP unset)")) config.gw = {192,168,0,1}; 
+   if(config.sn.toString().equals("(IP unset)")) config.sn = {255,255,255,0};
+  }
 
   wifimanager.setSaveConfigCallback(saveCallbackConfig);
 
@@ -351,11 +392,15 @@ void setup() {
     String mac ="_";
     mac += WiFi.macAddress();
     mac = config.host + mac;
+    delay(3000);
+    delay(3000);
     if(!wifimanager.autoConnect(mac.c_str(), config.pass)){
       delay(3000);
       ESP.reset();
       delay(5000);
     }
+
+    
 
     //Copy values and store in struct
     strcpy(config.host,custom_hostname.getValue());
@@ -381,7 +426,7 @@ void setup() {
   digitalWrite(pinB,LOW); /* Turn off pin blue */
 
   analogWriteRange(255); // 8 bits resolution
-  analogWriteFreq(1000); // 1khz frequency
+  analogWriteFreq(5000); // 5khz frequency
   
   serverA.on("/", [](){
     //handleRoot(); 
@@ -399,6 +444,30 @@ void setup() {
   
   serverA.on("/programa", handleProgramador);
 
+  serverA.on("/updateClock",[](){
+    serverA.send(200, "text/plain", ntp.getFormattedTime());
+  });
+
+  serverA.on("/clock",[](){
+    if(serverA.argName(0).equals("ntpServer"))
+      config.ntpServ = serverA.arg(0);
+
+    if(serverA.argName(1).equals("port"))
+      config.port = serverA.arg(1).toInt();
+
+    if(serverA.argName(2).equals("ntpZone"))
+      config.zone = serverA.arg(2).toInt();
+    Serial.println(config.zone);
+
+    if(serverA.argName(3).equals("hora"))
+      agora = serverA.arg(3);
+
+    saveConfig(filename, config);
+
+    serverA.send(200, "text/plain", "");
+
+  });
+
   serverA.on("/reset", handleReset);
 
   serverA.onNotFound([]() {                              // If the client requests any URI
@@ -410,7 +479,7 @@ void setup() {
   MDNS.begin(config.host);
   httpUpdater.setup(&serverA, update_path, config.user, config.pass);
   serverA.begin();
-  ntp.begin();
+  ntp.begin(config.port);
   MDNS.addService("http", "tcp", 80);
 
 }
@@ -418,62 +487,20 @@ void setup() {
 
 
 void loop() {
-  
+  float hp, hp1, ha;
+  float mp, mp1, ma;
   serverA.handleClient();
   MDNS.update();
+  if(!ntp.update()) Serial.println("Error RTC update!");
   timeClock();
 
-  String str(config.led);
-  float h = agora.substring(0, agora.indexOf(":")).toFloat() + (agora.substring(agora.indexOf(":")+1,agora.indexOf(":",agora.indexOf(":")+1)).toFloat()/60);
-  
-  if((config.sun == false) || (h >= 17.5)||(h <= 5.99)){
-  if(str.indexOf("sequencia") > -1){
-    sequenciaLed();
-  }else if(str.indexOf("aleatorio") > -1){
-    aleatorioLed();
-  }else if(str.indexOf("dimmer") > -1){
-    dimmerLed();
-  }
-  }else{
-    if(!str.indexOf("manual")> -1){
-      config.corLed = {0,0,0};
-      led(config.corLed);
-    }
-  }
+  ha = agora.substring(0, agora.indexOf(":")).toFloat();
+  ma = agora.substring(agora.indexOf(":")+1,agora.indexOf(":",agora.indexOf(":")+1)).toFloat();
+  ha += ma/60;
 
-}
-/**
- * Wait for set time
- **/
-bool wait(){
-  unsigned long currentTime = millis();
-  if((currentTime - previusTime) >= setTime){
-    previusTime = currentTime;
-    return true;
-  }else{
-    return false;
-  }
-  
-}
-
-/**
- * Update online clock
- **/
-void timeClock(){
-  unsigned long currentTime = millis();
-  if((currentTime - previusTimes) > 1000L){
-    previusTimes = currentTime;
-    ntp.update();
-    agora = ntp.getFormattedTime();
-    hoje = ntp.getDay();
-  }
-  serverA.handleClient();
-  
-  //Verificar Programa para controle automático da bomba
+ //Verificar Programa para controle automático da bomba
   if(config.count > 0){ //caso exista programa
    bool oldPump = config.pump;
-   float hp, hp1, ha;
-   float mp, mp1, ma;
    String aux;
     for(int i=0; i<config.count; i++){ //cria loop para ler todos os programas
       if(config.programas[i][hoje]){   // Compara se dia atual esta habilitado
@@ -483,9 +510,7 @@ void timeClock(){
         mp1 = config.horarios[i][1].substring(config.horarios[i][1].indexOf(":") + 1).toFloat();
         hp += mp/60;
         hp1 += mp1/60;
-        ha = agora.substring(0, agora.indexOf(":")).toFloat();
-        ma = agora.substring(agora.indexOf(":")+1,agora.indexOf(":",agora.indexOf(":")+1)).toFloat();
-        ha += ma/60;
+
         if(hp <= ha && hp1> ha){ // Verifica se horário atual esta no intervalo de bomba ligada
           digitalWrite(pump, LOW);   // Liga bomba
           config.pump = true;        // Atualiza variavel que indica estado da bomba
@@ -502,6 +527,61 @@ void timeClock(){
     saveConfig(filename, config); 
     }
   }
+
+  if((config.sun && (ha > 18.5 || ha < 6.0))|| !config.sun){
+  if(String(config.led).indexOf("sequencia") != -1 && wait()){
+    if(config.corLed.r == 0 && config.corLed.g == 0 && config.corLed.b == 0){
+      config.corLed = {255, 0, 0};
+    }else if(config.corLed.r == 255 && config.corLed.g == 0 && config.corLed.b == 0){
+      config.corLed = {255, 0, 255};
+    }else if(config.corLed.r == 255 && config.corLed.g == 0 && config.corLed.b == 255){
+      config.corLed = {0, 0, 255};
+    }else if(config.corLed.r == 0 && config.corLed.g == 0 && config.corLed.b == 255){
+      config.corLed = {0, 255, 255};
+    }else if(config.corLed.r == 0 && config.corLed.g == 255 && config.corLed.b == 255){
+      config.corLed = {0, 255, 0};
+    }else if(config.corLed.r == 0 && config.corLed.g == 255 && config.corLed.b == 0){
+      config.corLed = {255, 255, 0};
+    }else if(config.corLed.r == 255 && config.corLed.g == 255 && config.corLed.b == 0){
+      config.corLed = {255, 0, 0};
+    }
+    led(config.corLed);
+  }
+  }else{
+    if(String(config.led).indexOf("sequencia") != -1)
+      led({0,0,0});
+  }
+
+}
+/**
+ * Wait for set time
+ **/
+bool wait(){
+  unsigned long currentTime = millis();
+  if((currentTime - previusTime) >= config.speed){
+    previusTime = currentTime;
+    return true;
+  }else{
+    return false;
+  }
+  
+}
+
+/**
+ * Update online clock
+ **/
+void timeClock(){
+  unsigned long currentTime = millis();
+  if((currentTime - previusTimes) > SHOW_TIME_PERIOD){
+    previusTimes = currentTime;
+
+    agora = ntp.getFormattedTime();
+    hoje = ntp.getDay();
+    
+    Serial.print(agora);
+    Serial.print(" - ");
+    Serial.println(hoje);
+  }
 }
 
 /**
@@ -511,187 +591,6 @@ void led(RGB colorname){
   analogWrite(pinR,colorname.r);
   analogWrite(pinG,colorname.g);
   analogWrite(pinB,colorname.b);
-}
-
-void sequenciaLed(){
-  config.corLed = {255, 0, 0};
-  int i = 0;
-  for(i = 0; i <= 255; i++){
-    config.corLed.b = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i = 255; i>= 0; i--){
-    config.corLed.r = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i = 0; i<=255; i++){
-    config.corLed.g = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i = 255; i>=0; i--){
-    config.corLed.b = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i = 0; i <= 255; i++){
-    config.corLed.r = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i = 255; i>=0; i--){
-    config.corLed.g = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-}
-
-void aleatorioLed(){
-  randomSeed(random(256));
-  config.corLed.r = random(256);
-  config.corLed.g = random(256);
-  config.corLed.b = random(256);
-  led(config.corLed);
-  delay(config.speed);
-}
-
-void dimmerLed(){
-  int i = 0;
-  for(i = 0; i<=255; i++){
-    config.corLed.r = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i=0; i<=255; i++){
-    config.corLed.g = i;
-    config.corLed.b = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i=255; i>=0; i--){
-    config.corLed.r = i;
-    config.corLed.g = i;
-    config.corLed.b = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i=0; i<=255; i++){
-    config.corLed.r = i;
-    config.corLed.b = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i = 0; i<=255; i++){
-    config.corLed.g = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i=255; i>=0; i--){
-    config.corLed.r = i;
-    config.corLed.g = i;
-    config.corLed.b = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i = 0; i<=255; i++){
-    config.corLed.b = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i=0; i<=255; i++){
-    config.corLed.r = i;
-    config.corLed.g = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i=255; i>=0; i--){
-    config.corLed.r = i;
-    config.corLed.g = i;
-    config.corLed.b = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i=0; i<=255; i++){
-    config.corLed.b = i;
-    config.corLed.g = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i = 0; i<=255; i++){
-    config.corLed.r = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i=255; i>=0; i--){
-    config.corLed.r = i;
-    config.corLed.g = i;
-    config.corLed.b = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i = 0; i<=255; i++){
-    config.corLed.g = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i=0; i<=255; i++){
-    config.corLed.b = i;
-    config.corLed.r = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i=255; i>=0; i--){
-    config.corLed.r = i;
-    config.corLed.g = i;
-    config.corLed.b = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i=0; i<=255; i++){
-    config.corLed.g = i;
-    config.corLed.r = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i = 0; i<=255; i++){
-    config.corLed.b = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-  for(i=255; i>=0; i--){
-    config.corLed.r = i;
-    config.corLed.g = i;
-    config.corLed.b = i;
-    led(config.corLed);
-    timeClock();
-    delay(config.speed);
-  }
-
 }
 
 void handleUpdate(){
@@ -760,20 +659,22 @@ void handleActionPump(){
 
 void handleActionLed(){
   //ativar led
+
   if(serverA.argName(0).equals("cor")){
     config.corLed.r = strToByte(serverA.arg(0).substring(1,3)); // get red color 
     config.corLed.g = strToByte(serverA.arg(0).substring(3,5)); // get green color 
     config.corLed.b = strToByte(serverA.arg(0).substring(5));   // get blue color
     led(config.corLed);
   }else if(serverA.argName(0).equals("estado")){
+    config.corLed = {0,0,0};
     strTochar(serverA.arg(0), config.led);
     config.speed = serverA.arg(1).toInt();
-  }else if(serverA.argName(0).equals("sun")){
-    if(serverA.arg(0).equals("0")){
+    if(serverA.arg(2).equals("0")){
       config.sun = false;
-    }else if(serverA.arg(0).equals("1")){
-      config.sn = true;
+    }else if(serverA.arg(2).equals("1")){
+      config.sun = true;
     }
+  
   } 
   serverA.send(200, "text/plain","");
   saveConfig(filename, config);
@@ -874,10 +775,16 @@ void loadConfigurator(const char* filename, Config &config){
     strlcpy(config.led, doc["Led"]|"manual", sizeof(config.led));   // estado do Led,
     config.count = doc["count"];  ///Quantidades de programas,
     for(int i = 0; i<4; i++){     /// IP, Gateway, Sub-Rede,
+    
     config.ip[i] = doc["ip"][i];
     config.gw[i] = doc["gw"][i];
     config.sn[i] = doc["sn"][i];
     }
+
+    config.ntpServ = doc["ntpServer"]|"pool.ntp.org";
+    config.port = doc["ntpPort"]|123;
+    config.zone = doc["ntpZone"]|-3;
+
     config.sun = doc["sun"];
     config.speed = doc["delay"]|10; //atualiza velocidade de transição na cor dos leds
     config.dhcp = doc["dhcp"]|true; // dados de dhcp manual ou automático,
@@ -926,6 +833,9 @@ void saveConfig(const char* filename, Config &conf){
     doc["Led"] = dados.led;
     doc["count"] = dados.count;
     doc["sun"] = dados.sun;
+    doc["ntpServer"] = dados.ntpServ;
+    doc["ntpPort"] = dados.port;
+    doc["ntpZone"] = dados.zone;
     copyArray(dados.programas, doc["pgr"]);
     copyArray(dados.horarios, doc["hr"]);
     if(serializeJson(doc,file) == 0){
