@@ -19,39 +19,36 @@
  * ******************/
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <FS.h>
-#include <LittleFS.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266HTTPUpdateServer.h>
 #include <WiFiUdp.h>
 #include <NTPClient.h>
 #include <WiFiManager.h>
-#include <ArduinoJson.h>
 
 /******************************************************
  * DEFINES
  ******************************************************/
 
+#define SHOW_TIME_PERIOD 1000
+#define NTP_TIMEOUT 1500
 
 /**************************************************************
  * GLOBAL VARIABLES
  **************************************************************/
-
+int8_t timeZone = -3;
+int8_t minutesTimeZone = 0;
+int8_t ntpPort = 123;
+const PROGMEM char *ntpServer = "pool.ntp.org";
 
 
 const char* update_path = "/firmware"; /*!< Path for update*/
 const char* filename = "/setting.json";
-const char* jsonFile = "/config.json";
-String dias_da_Semana [7] = {"Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"};
-bool progs [5][7] = {{false,false,false,false,false,false,false}, {false,false,false,false,false,false,false},
-                     {false,false,false,false,false,false,false}, {false,false,false,false,false,false,false},
-                     {false,false,false,false,false,false,false}};
-String hors [5][2] = {{"null","null"},{"null","null"},{"null","null"},{"null","null"},{"null","null"}};
 bool pumpAuto = false; /*!< store status pump auto*/
 bool shouldSave = false;
-unsigned long setTime = 1000; /*!< set time delay */
 unsigned long previusTime = 0; /*!< receive previus time for trigger delay */
 unsigned long previusTimes = 0; /*!< receive previus time for trigger delay ntp */
 File uploadFile; /*!< Store data for SPIFFS readed*/
@@ -59,12 +56,13 @@ int pinR = 12; /*!< Set pin red as number 12 */
 int pinG = 13; /*!< Set pin green as number 13 */
 int pinB = 14; /*!< Set pin blue as number 14 */
 int pump = 5; ///< define pin of pump
-int sunLight = 4; /// define ldr sensor
+int btnPump = 4; /// define ldr sensor   
 int prog = 0;  //Define program run
 String page = ""; /*!< Store page HTML */
-String hora = ""; /*!< Store ntp time */
-String dia = ""; /*!< Store day of week */
-String ledStatus = ""; // Store status of led
+String agora = ""; /*!< Store ntp time */
+int hoje = 0; /*!< Store day of week */
+
+ DynamicJsonDocument doc(8192);
 
 
 /******************************************************************
@@ -109,12 +107,6 @@ String ledStatus = ""; // Store status of led
  * */
 WiFiUDP ntpUDP;
 
-/**
- * @class ntp
- * @brief create client ntp
- * 
- * */
-NTPClient ntp(ntpUDP,"b.st1.ntp.br", -3 * 3600);
 
 /**
  * @struct RGB 
@@ -151,21 +143,26 @@ struct Config{
   char user[20]; /*!< username for login*/
   char pass[16]; /*!< paasword for access*/
   char host[20]; /*!< hostname for local access*/
-  uint32_t ip;
-  uint32_t gw;
-  uint32_t sn;
-  bool pump;
-  String led;
+  String ntpServ ="pool.ntp.org"; /*!< Server ntp */
+  int port = 123; /*!< Port value ntp>*/
+  int8_t zone = -3; /*!< timeZone ntp*/
+  IPAddress ip = {192,168,0,112}; /*!< Ip Address*/
+  IPAddress gw = {192,168,0,1}; /*!< Gateway Address*/
+  IPAddress sn = {255,255,255,0}; /*!< subnet address*/
+  RGB corLed = {0,0,0}; /*!< Struct RGB color*/
+  int count = 0;   /*!< store number of timer */
+  bool pump = false; /*!< state pump pool*/
+  bool dhcp = true; /*!< state of dhcp device*/
+  bool sun = false;
+  char led[16];
   bool programas [5][7];
   String horarios [5][2];
+  unsigned int speed = 10;
 }config;
 
-IPAddress _ip(config.ip);
-IPAddress _gw(config.gw);
-IPAddress _sn(config.sn);
 
-//Config config;
-RGB color = {0,0,0};/*!< object RGB color */
+
+
 
 
 /***********************************************
@@ -306,22 +303,42 @@ void handleUpdate();
 
 
 /**
- * @class IPAddressParameter : public WiFiManagerParameter
- * @brief Classe conforme descrito na bibliote WiFimanage
+ * @fn strToChar(String str, char *carc)
  * 
- * @return IPAddress ip
- * */
-class IPAddressParameter : public WiFiManagerParameter {
-public:
-    IPAddressParameter(const char *id, const char *placeholder, IPAddress address)
-        : WiFiManagerParameter("") {
-        init(id, placeholder, address.toString().c_str(), 16, "", WFM_LABEL_BEFORE);
-    }
+ * @brief Convert string to character
+ * 
+ * @param str 
+ * @param carc 
+ */
+void strTochar(String str, char * carc);
 
-    bool getValue(IPAddress &ip) {
-        return ip.fromString(WiFiManagerParameter::getValue());
-    }
-};
+/**
+ * @brief Handler programmable timer  
+ * 
+ */
+void handleProgramador();
+
+
+/**
+ * @brief handler IP Address
+ * 
+ */
+void handleIp();
+
+/**
+ * @brief handler reset of device
+ * 
+ */
+void handleReset();
+
+
+ /**
+ * @class ntp
+ * @brief create client ntp
+ * 
+ * */
+ NTPClient ntp(ntpUDP, config.ntpServ.c_str(),config.zone * 3600);
+
 
 
 /********************************************
@@ -336,18 +353,29 @@ public:
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
+  
+  
 
   loadConfigurator(filename, config);
-  Serial.println("Prepair parameters");
-  
+  Serial.println(config.zone);
+
+  ntp.setTimeOffset(config.zone * 3600);
+ 
+
+
   //Parameters of setting
   WiFiManagerParameter custom_hostname("host","hostname",config.host,sizeof(config.host));
   WiFiManagerParameter custom_pass("pass","password",config.pass, sizeof(config.pass));
   WiFiManagerParameter custom_user("user","username",config.user, sizeof(config.user));
-  IPAddressParameter   custom_ip("ip", "Static IP", _ip);
-  IPAddressParameter   custom_gw("gw", "Gateway", _gw);
-  IPAddressParameter   custom_sn("sn", "Sub-Mask", _sn);
+  WiFiManagerParameter custom_ip("ip", "Static IP",config.ip.toString().c_str(), 16);
+  WiFiManagerParameter custom_gw("gw", "Gateway",  config.gw.toString().c_str(), 16);
+  WiFiManagerParameter custom_sn("sn", "Sub-Mask",  config.sn.toString().c_str(), 16);
 
+  if(config.dhcp){
+   if(config.ip.toString().equals("(IP unset)")) config.ip = {192,168,0,112};
+   if(config.gw.toString().equals("(IP unset)")) config.gw = {192,168,0,1}; 
+   if(config.sn.toString().equals("(IP unset)")) config.sn = {255,255,255,0};
+  }
 
   wifimanager.setSaveConfigCallback(saveCallbackConfig);
 
@@ -357,37 +385,31 @@ void setup() {
   wifimanager.addParameter(&custom_ip);
   wifimanager.addParameter(&custom_gw);
   wifimanager.addParameter(&custom_sn);
-  _ip = config.ip;
-  _gw = config.gw;
-  _sn = config.sn;
-  wifimanager.setSTAStaticIPConfig(_ip, _gw, _sn);
+  
+  if(config.dhcp)
+    wifimanager.setSTAStaticIPConfig(config.ip, config.gw, config.sn);
 
     String mac ="_";
     mac += WiFi.macAddress();
     mac = config.host + mac;
+    delay(3000);
+    delay(3000);
     if(!wifimanager.autoConnect(mac.c_str(), config.pass)){
-      Serial.println("Failed to connect");
       delay(3000);
       ESP.reset();
       delay(5000);
     }
+
+    
 
     //Copy values and store in struct
     strcpy(config.host,custom_hostname.getValue());
     strcpy(config.pass,custom_pass.getValue());
     strcpy(config.user,custom_user.getValue());
 
-    if(custom_ip.getValue(_ip)){
-      config.ip = _ip;
-    }
-
-    if(custom_gw.getValue(_gw)){
-      config.gw = _gw;
-    }
-
-    if(custom_sn.getValue(_sn)){
-      config.sn = _sn;
-    }
+    config.ip.fromString(custom_ip.getValue());
+    config.gw.fromString(custom_gw.getValue());
+    config.sn.fromString(custom_sn.getValue());
 
     saveConfig(filename,config);
 
@@ -396,18 +418,15 @@ void setup() {
   pinMode(pinG, OUTPUT); /* Set pin green as Output */
   pinMode(pinB, OUTPUT); /* Set pin blue as Output */
   pinMode(pump, OUTPUT); /* Set pin pump as Output */
-  pinMode(sunLight, INPUT); /* Set pin sensor sun as Input */
+  pinMode(btnPump, INPUT); /* Set pin sensor sun as Input */
 
-  digitalWrite(pump, LOW); /* Turn pump to off */
+  digitalWrite(pump, HIGH); /* Turn pump to off */
   digitalWrite(pinR,LOW); /* Turn off pin red */
   digitalWrite(pinG,LOW); /* Turn off pin green */
   digitalWrite(pinB,LOW); /* Turn off pin blue */
 
   analogWriteRange(255); // 8 bits resolution
-  analogWriteFreq(1000); // 1khz frequency
-
-  Serial.println("Connected.");
-  Serial.println(WiFi.localIP().toString());
+  analogWriteFreq(5000); // 5khz frequency
   
   serverA.on("/", [](){
     //handleRoot(); 
@@ -415,11 +434,41 @@ void setup() {
       serverA.send(404, "text/plain", "404: Not Found"); // otherwise, respond with a 404 (Not Found) error
   });
   
-  serverA.on("/update.json",handleUpdate); 
+  serverA.on("/update",handleUpdate); 
 
   serverA.on("/pump", handleActionPump);
 
   serverA.on("/led", handleActionLed);
+
+  serverA.on("/meuIp", handleIp);
+  
+  serverA.on("/programa", handleProgramador);
+
+  serverA.on("/updateClock",[](){
+    serverA.send(200, "text/plain", ntp.getFormattedTime());
+  });
+
+  serverA.on("/clock",[](){
+    if(serverA.argName(0).equals("ntpServer"))
+      config.ntpServ = serverA.arg(0);
+
+    if(serverA.argName(1).equals("port"))
+      config.port = serverA.arg(1).toInt();
+
+    if(serverA.argName(2).equals("ntpZone"))
+      config.zone = serverA.arg(2).toInt();
+    Serial.println(config.zone);
+
+    if(serverA.argName(3).equals("hora"))
+      agora = serverA.arg(3);
+
+    saveConfig(filename, config);
+
+    serverA.send(200, "text/plain", "");
+
+  });
+
+  serverA.on("/reset", handleReset);
 
   serverA.onNotFound([]() {                              // If the client requests any URI
     if (!handleFileRead(serverA.uri()))                  // send it if it exists
@@ -430,7 +479,7 @@ void setup() {
   MDNS.begin(config.host);
   httpUpdater.setup(&serverA, update_path, config.user, config.pass);
   serverA.begin();
-  ntp.begin();
+  ntp.begin(config.port);
   MDNS.addService("http", "tcp", 80);
 
 }
@@ -438,10 +487,70 @@ void setup() {
 
 
 void loop() {
-  
+  float hp, hp1, ha;
+  float mp, mp1, ma;
   serverA.handleClient();
   MDNS.update();
+  if(!ntp.update()) Serial.println("Error RTC update!");
   timeClock();
+
+  ha = agora.substring(0, agora.indexOf(":")).toFloat();
+  ma = agora.substring(agora.indexOf(":")+1,agora.indexOf(":",agora.indexOf(":")+1)).toFloat();
+  ha += ma/60;
+
+ //Verificar Programa para controle automático da bomba
+  if(config.count > 0){ //caso exista programa
+   bool oldPump = config.pump;
+   String aux;
+    for(int i=0; i<config.count; i++){ //cria loop para ler todos os programas
+      if(config.programas[i][hoje]){   // Compara se dia atual esta habilitado
+        hp = config.horarios[i][0].substring(0, config.horarios[i][0].indexOf(":")).toFloat();
+        hp1 = config.horarios[i][1].substring(0, config.horarios[i][1].indexOf(":")).toFloat();
+        mp = config.horarios[i][0].substring(config.horarios[i][0].indexOf(":") + 1).toFloat();
+        mp1 = config.horarios[i][1].substring(config.horarios[i][1].indexOf(":") + 1).toFloat();
+        hp += mp/60;
+        hp1 += mp1/60;
+
+        if(hp <= ha && hp1> ha){ // Verifica se horário atual esta no intervalo de bomba ligada
+          digitalWrite(pump, LOW);   // Liga bomba
+          config.pump = true;        // Atualiza variavel que indica estado da bomba
+          pumpAuto = true;           // indica que a bomba opera em modo automático
+        }else if(hp1<= ha && pumpAuto){  // verifica se esta na hora de desligar bomba
+          digitalWrite(pump,HIGH); // Desliga bomba;
+          config.pump = false;   // Atualiza variavel que indica estado da bomba.
+          pumpAuto = false;     //Indica que a bomba deixou o modo automático.
+        }
+      }
+    }
+    if(oldPump != config.pump){ //Salva apenas se valor mudar
+    //atualiza arquivo Json
+    saveConfig(filename, config); 
+    }
+  }
+
+  if((config.sun && (ha > 18.5 || ha < 6.0))|| !config.sun){
+  if(String(config.led).indexOf("sequencia") != -1 && wait()){
+    if(config.corLed.r == 0 && config.corLed.g == 0 && config.corLed.b == 0){
+      config.corLed = {255, 0, 0};
+    }else if(config.corLed.r == 255 && config.corLed.g == 0 && config.corLed.b == 0){
+      config.corLed = {255, 0, 255};
+    }else if(config.corLed.r == 255 && config.corLed.g == 0 && config.corLed.b == 255){
+      config.corLed = {0, 0, 255};
+    }else if(config.corLed.r == 0 && config.corLed.g == 0 && config.corLed.b == 255){
+      config.corLed = {0, 255, 255};
+    }else if(config.corLed.r == 0 && config.corLed.g == 255 && config.corLed.b == 255){
+      config.corLed = {0, 255, 0};
+    }else if(config.corLed.r == 0 && config.corLed.g == 255 && config.corLed.b == 0){
+      config.corLed = {255, 255, 0};
+    }else if(config.corLed.r == 255 && config.corLed.g == 255 && config.corLed.b == 0){
+      config.corLed = {255, 0, 0};
+    }
+    led(config.corLed);
+  }
+  }else{
+    if(String(config.led).indexOf("sequencia") != -1)
+      led({0,0,0});
+  }
 
 }
 /**
@@ -449,7 +558,7 @@ void loop() {
  **/
 bool wait(){
   unsigned long currentTime = millis();
-  if((currentTime - previusTime) >= setTime){
+  if((currentTime - previusTime) >= config.speed){
     previusTime = currentTime;
     return true;
   }else{
@@ -463,11 +572,15 @@ bool wait(){
  **/
 void timeClock(){
   unsigned long currentTime = millis();
-  if((currentTime - previusTimes) > 1000L){
+  if((currentTime - previusTimes) > SHOW_TIME_PERIOD){
     previusTimes = currentTime;
-    ntp.update();
-    hora = ntp.getFormattedTime();
-    dia = dias_da_Semana[ntp.getDay()];
+
+    agora = ntp.getFormattedTime();
+    hoje = ntp.getDay();
+    
+    Serial.print(agora);
+    Serial.print(" - ");
+    Serial.println(hoje);
   }
 }
 
@@ -482,7 +595,47 @@ void led(RGB colorname){
 
 void handleUpdate(){
     // Envia atualização de páginas
+    if (!handleFileRead(filename))                  // send it if it exists
+      serverA.send(404, "text/plain", "404: Not Found");
+}
 
+void handleIp(){
+  if(serverA.argName(0).equals("meuip")){
+    StaticJsonDocument<1024> doc1;
+    deserializeJson(doc1,serverA.arg(0));
+    for(int i = 0; i<4; i++){
+    config.ip[i] = doc1["ip"][i];
+    config.gw[i] = doc1["gw"][i];
+    config.sn[i] = doc1["sn"][i];
+    }
+    config.dhcp = doc1["dhcp"];
+    saveConfig(filename, config);
+    serverA.send(200, "text/plain","");
+  }
+}
+
+void handleProgramador(){
+  
+  if(serverA.argName(0).equals("prog")){
+    ///StaticJsonDocument<1024> doc;
+    DeserializationError error = deserializeJson(doc, serverA.arg(0));
+    if(error) Serial.println("Failed to read file, using default config");
+    copyArray(doc["pgr"], config.programas);
+  }
+  if(serverA.argName(1).equals("hora")){
+    ///StaticJsonDocument<1024> doc;
+    DeserializationError error = deserializeJson(doc, serverA.arg(1));
+    if(error) Serial.println("Failed to read file, using default config");
+    copyArray(doc["hr"], config.horarios);
+  }
+  if(serverA.argName(2).equals("count")){
+    ///StaticJsonDocument<1024> doc;
+    DeserializationError error = deserializeJson(doc, serverA.arg(2));
+    if(error) Serial.println("Failed to read file, using default config");
+    config.count = doc["count"];
+  }
+  saveConfig(filename, config);
+  serverA.send(200, "text/plain","");
 }
 
 /**
@@ -492,31 +645,67 @@ void handleActionPump(){
     //ativar bomba
     if(serverA.argName(0).equals("setPump")){
       if(serverA.arg(0).equals("on")){
-        digitalWrite(pump, HIGH);
-        Serial.println("Pump On");
-      }else if(serverA.arg(0).equals("off")){
         digitalWrite(pump, LOW);
-        Serial.println("Pump Off");
+        config.pump = true;
+        pumpAuto = false;
+      }else if(serverA.arg(0).equals("off")){
+        digitalWrite(pump, HIGH);
+        config.pump = false;
       }
     }
-
+    serverA.send(200,"text/plain","");
+    saveConfig(filename, config);
   }
 
 void handleActionLed(){
   //ativar led
-  if(serverA.argName(0).equals("color")){
-    Serial.println(serverA.arg(0));
-    color.r = strToByte(serverA.arg(0).substring(1,3)); // get red color 
-    color.g = strToByte(serverA.arg(0).substring(3,5)); // get green color 
-    color.b = strToByte(serverA.arg(0).substring(5));   // get blue color
-    led(color);
-    
+
+  if(serverA.argName(0).equals("cor")){
+    config.corLed.r = strToByte(serverA.arg(0).substring(1,3)); // get red color 
+    config.corLed.g = strToByte(serverA.arg(0).substring(3,5)); // get green color 
+    config.corLed.b = strToByte(serverA.arg(0).substring(5));   // get blue color
+    led(config.corLed);
   }else if(serverA.argName(0).equals("estado")){
-    ledStatus = serverA.arg(0);
-  }
+    config.corLed = {0,0,0};
+    strTochar(serverA.arg(0), config.led);
+    config.speed = serverA.arg(1).toInt();
+    if(serverA.arg(2).equals("0")){
+      config.sun = false;
+    }else if(serverA.arg(2).equals("1")){
+      config.sun = true;
+    }
+  
+  } 
+  serverA.send(200, "text/plain","");
+  saveConfig(filename, config);
 
 }
 
+//Trata as ações de reset do módulo
+void handleReset(){
+  if(serverA.argName(0).equals("reset")){ // Verifica nome de dados recebidos
+    if(serverA.arg(0).equals("again")){ // Aqui reinicia módulo mantendo dados
+      serverA.send(200, "text/plain","Reset Device...");
+      delay(1000);
+      ESP.reset();
+      delay(1000);
+    }else if(serverA.arg(0).equals("default")){ // Aqui reinicia módulo ao padrão de fábrica
+      serverA.send(200,"text/plain", "Default Reset....");
+      delay(1000);
+      wifimanager.resetSettings();
+      if(SPIFFS.remove(filename)) Serial.println("Arquivos Deletados");
+      ESP.reset();
+      delay(1000);
+    }
+  }
+}
+
+///Converte String para Caracter
+void strTochar(String str, char * carc){
+  for(int i = 0; i < str.length(); i++){
+    carc[i] = str[i];
+  }
+}
 
 //Convert string to byte
 int strToByte(String str){
@@ -546,7 +735,6 @@ String getContentType(String filename) { // convert the file extension to the MI
 }
 
 bool handleFileRead(String path) { // send the right file to the client (if it exists)
-  Serial.println("handleFileRead: " + path);
   if (path.endsWith("/")) path += "index.htm";         // If a folder is requested, send the index file
   String contentType = getContentType(path);            // Get the MIME type
   if(SPIFFS.begin()){
@@ -556,83 +744,102 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
     file.close(); 
     SPIFFS.end();                                      // Then close the file again
     return true;
+  }else{
+    path += ".gz";
+    File file = SPIFFS.open(path, "r");                 // Open it
+    size_t sent = serverA.streamFile(file, contentType); // And send it to the client
+    file.close(); 
+    SPIFFS.end();                                      // Then close the file again
+    return true;
   }
   SPIFFS.end();
   }
-  Serial.println("\tFile Not Found");
-  Serial.println(path);
   return false;                                         // If the file doesn't exist, return false
 }
 
+///Carrega configurações previamente salvas
 void loadConfigurator(const char* filename, Config &config){
 
-  if(SPIFFS.begin()){
-    Serial.println("mount File system.....");
+  if(SPIFFS.begin()){ ///inicializa sistema de arquivos
     File file;
-    if(SPIFFS.exists(filename)){
-      Serial.println("file found!!!");
-      file = SPIFFS.open(filename, "r");
-      Serial.println("readinng file....");
+    if(SPIFFS.exists(filename)){ // Verifica existencia de arquivo
+      file = SPIFFS.open(filename, "r");  //Existindo abre em modo de leitura
     }else{
-      Serial.println("file not found!!  Create");
-      file = SPIFFS.open(filename,"w");
+      file = SPIFFS.open(filename,"w"); /// caso contrário cria arquivo para escrita de valores.
     }
-    
-    StaticJsonDocument<256> doc;
-    Serial.println("doc create");
-    DeserializationError error = deserializeJson(doc,file);
-    Serial.println("deserialization");
+    DeserializationError error = deserializeJson(doc,file); // formata em modelo Json
     if(error) Serial.println("Failed to read file, using default config");
-    strlcpy(config.host,doc["hostname"]|"aqua",sizeof(config.host));
-    strlcpy(config.pass,doc["pass"]|"admin123",sizeof(config.pass));
-    strlcpy(config.user,doc["user"]|"admin",sizeof(config.user));
-    config.ip = doc["ip"];
-    Serial.println("IP config:");
-    IPAddress _ip(config.ip);
-    Serial.println(_ip);
-    config.gw = doc["gw"];
-    config.sn = doc["sn"];
-    config.pump = doc["Pump"];
-    config.led = doc["Led"];
-    config.programas = doc["pgr"];
-    config.horarios = doc["hr"];
+    strlcpy(config.host,doc["hostname"]|"aqua",sizeof(config.host)); //Grava dados de hostname,
+    strlcpy(config.pass,doc["pass"]|"admin123",sizeof(config.pass)); // Senha de acesso para atualização,
+    strlcpy(config.user,doc["user"]|"admin",sizeof(config.user));    // nome de usuário,
+    strlcpy(config.led, doc["Led"]|"manual", sizeof(config.led));   // estado do Led,
+    config.count = doc["count"];  ///Quantidades de programas,
+    for(int i = 0; i<4; i++){     /// IP, Gateway, Sub-Rede,
+    
+    config.ip[i] = doc["ip"][i];
+    config.gw[i] = doc["gw"][i];
+    config.sn[i] = doc["sn"][i];
+    }
+
+    config.ntpServ = doc["ntpServer"]|"pool.ntp.org";
+    config.port = doc["ntpPort"]|123;
+    config.zone = doc["ntpZone"]|-3;
+
+    config.sun = doc["sun"];
+    config.speed = doc["delay"]|10; //atualiza velocidade de transição na cor dos leds
+    config.dhcp = doc["dhcp"]|true; // dados de dhcp manual ou automático,
+    config.pump = doc["Pump"];      // estado da bomba (on ou Off),
+    config.corLed.r = doc["cor_r"];  ///intenciadade da cor vermelha no led,
+    config.corLed.g = doc["cor_g"]; //intencidade da cor verde no led,
+    config.corLed.b = doc["cor_b"]; //intencidade da cor azul no led,
+    copyArray(doc["pgr"],config.programas); // Programações da bomba e 
+    copyArray(doc["hr"], config.horarios);   // horarios de ativação da bomba.
     file.close();
-    Serial.println("close file");
     SPIFFS.end();
-    Serial.println("end System file");
   }
 
 }
 
+
+//Salva dados de configuração do módulo
 void saveConfig(const char* filename, Config &conf){
 
   Config dados = conf;
   
   if(SPIFFS.begin()){
-    Serial.println("mount File system....");
     if(SPIFFS.exists(filename)){
       SPIFFS.remove(filename);
     }
-    Serial.println("Create file");
     File file = SPIFFS.open(filename,"w");
     if(!file){
-      Serial.println("Failed to create file");
       SPIFFS.end();
       return;
     }
-    StaticJsonDocument<256> doc;
+   /// StaticJsonDocument<2048> doc;
     doc["hostname"] = dados.host;
     doc["pass"] = dados.pass;
     doc["user"] = dados.user;
-    doc["ip"] = dados.ip;
-    doc["gw"] = dados.gw;
-    doc["sn"] = dados.sn;
+    for(int i = 0; i<4; i++){
+     doc["ip"][i] = dados.ip[i];
+     doc["gw"][i] = dados.gw[i];
+     doc["sn"][i] = dados.sn[i];
+    }
+    doc["delay"] = dados.speed;
+    doc["dhcp"] = dados.dhcp;
     doc["Pump"] = dados.pump;
+    doc["cor_r"] = dados.corLed.r;
+    doc["cor_g"] = dados.corLed.g;
+    doc["cor_b"] = dados.corLed.b;
     doc["Led"] = dados.led;
-    doc["pgr"] = dados.programas;
-    doc["hr"] = dados.horarios;
+    doc["count"] = dados.count;
+    doc["sun"] = dados.sun;
+    doc["ntpServer"] = dados.ntpServ;
+    doc["ntpPort"] = dados.port;
+    doc["ntpZone"] = dados.zone;
+    copyArray(dados.programas, doc["pgr"]);
+    copyArray(dados.horarios, doc["hr"]);
     if(serializeJson(doc,file) == 0){
-      Serial.println("Failed to write file");
+      Serial.println("Error!");
     }
     file.close();
     SPIFFS.end();
@@ -640,6 +847,5 @@ void saveConfig(const char* filename, Config &conf){
 }
 
 void saveCallbackConfig(){
-  Serial.println("set save flag true");
   shouldSave = true;
 }
