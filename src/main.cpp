@@ -146,9 +146,11 @@ struct Config{
   String ntpServ ="pool.ntp.org"; /*!< Server ntp */
   int port = 123; /*!< Port value ntp>*/
   int8_t zone = -3; /*!< timeZone ntp*/
-  IPAddress ip = {192,168,0,112}; /*!< Ip Address*/
-  IPAddress gw = {192,168,0,1}; /*!< Gateway Address*/
-  IPAddress sn = {255,255,255,0}; /*!< subnet address*/
+  //IPAddress ip = {192,168,0,112}; /*!< Ip Address*/
+  //IPAddress gw = {192,168,0,1}; /*!< Gateway Address*/
+  //IPAddress sn = {255,255,255,0}; /*!< subnet address*/
+  //IPAddress dnsIp = IPAddress(170,80,225,4);
+  
   RGB corLed = {0,0,0}; /*!< Struct RGB color*/
   int count = 0;   /*!< store number of timer */
   bool pump = false; /*!< state pump pool*/
@@ -291,6 +293,12 @@ void handleActionPump();
  * */
 void handleActionLed();
 
+/**
+ * @brief Convert string to Byte
+ * 
+ * @param str 
+ * @return int 
+ */
 int strToByte(String str);
 
 /**
@@ -323,7 +331,7 @@ void handleProgramador();
  * @brief handler IP Address
  * 
  */
-void handleIp();
+//void handleIp();
 
 /**
  * @brief handler reset of device
@@ -337,7 +345,7 @@ void handleReset();
  * @brief create client ntp
  * 
  * */
- NTPClient ntp(ntpUDP, config.ntpServ.c_str(),config.zone * 3600);
+ NTPClient ntp(ntpUDP, config.ntpServ.c_str(), config.zone * 3600);
 
 
 
@@ -352,14 +360,11 @@ void handleReset();
  * */
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600);
-  
-  
+  //Serial.begin(9600);
 
   loadConfigurator(filename, config);
-  Serial.println(config.zone);
 
-  ntp.setTimeOffset(config.zone * 3600);
+  delay(1000); //Aguarda 1 segundo
  
 
 
@@ -367,49 +372,56 @@ void setup() {
   WiFiManagerParameter custom_hostname("host","hostname",config.host,sizeof(config.host));
   WiFiManagerParameter custom_pass("pass","password",config.pass, sizeof(config.pass));
   WiFiManagerParameter custom_user("user","username",config.user, sizeof(config.user));
+  /*
   WiFiManagerParameter custom_ip("ip", "Static IP",config.ip.toString().c_str(), 16);
   WiFiManagerParameter custom_gw("gw", "Gateway",  config.gw.toString().c_str(), 16);
   WiFiManagerParameter custom_sn("sn", "Sub-Mask",  config.sn.toString().c_str(), 16);
-
+  */
+/*
   if(config.dhcp){
    if(config.ip.toString().equals("(IP unset)")) config.ip = {192,168,0,112};
    if(config.gw.toString().equals("(IP unset)")) config.gw = {192,168,0,1}; 
    if(config.sn.toString().equals("(IP unset)")) config.sn = {255,255,255,0};
   }
+  */
 
   wifimanager.setSaveConfigCallback(saveCallbackConfig);
 
   wifimanager.addParameter(&custom_hostname);
   wifimanager.addParameter(&custom_user);
   wifimanager.addParameter(&custom_pass);
+  /*
   wifimanager.addParameter(&custom_ip);
   wifimanager.addParameter(&custom_gw);
   wifimanager.addParameter(&custom_sn);
-  
+  */
+  /*
   if(config.dhcp)
     wifimanager.setSTAStaticIPConfig(config.ip, config.gw, config.sn);
+    */
 
     String mac ="_";
     mac += WiFi.macAddress();
     mac = config.host + mac;
-    delay(3000);
-    delay(3000);
+
     if(!wifimanager.autoConnect(mac.c_str(), config.pass)){
       delay(3000);
       ESP.reset();
       delay(5000);
     }
 
-    
+
 
     //Copy values and store in struct
     strcpy(config.host,custom_hostname.getValue());
     strcpy(config.pass,custom_pass.getValue());
     strcpy(config.user,custom_user.getValue());
 
+    /*
     config.ip.fromString(custom_ip.getValue());
     config.gw.fromString(custom_gw.getValue());
     config.sn.fromString(custom_sn.getValue());
+    */
 
     saveConfig(filename,config);
 
@@ -440,7 +452,7 @@ void setup() {
 
   serverA.on("/led", handleActionLed);
 
-  serverA.on("/meuIp", handleIp);
+  //serverA.on("/meuIp", handleIp);
   
   serverA.on("/programa", handleProgramador);
 
@@ -475,13 +487,14 @@ void setup() {
       serverA.send(404, "text/plain", "404: Not Found"); // otherwise, respond with a 404 (Not Found) error
   });
 
-  
+  WiFi.mode(WIFI_STA);
+  delay(500);
   MDNS.begin(config.host);
   httpUpdater.setup(&serverA, update_path, config.user, config.pass);
   serverA.begin();
-  ntp.begin(config.port);
   MDNS.addService("http", "tcp", 80);
-
+  ntp.begin();
+  delay(1000);
 }
 
 
@@ -491,8 +504,12 @@ void loop() {
   float mp, mp1, ma;
   serverA.handleClient();
   MDNS.update();
-  if(!ntp.update()) Serial.println("Error RTC update!");
-  timeClock();
+
+  if(ntp.update()){
+    timeClock();
+  }else{
+    agora = agora + 1;
+  }
 
   ha = agora.substring(0, agora.indexOf(":")).toFloat();
   ma = agora.substring(agora.indexOf(":")+1,agora.indexOf(":",agora.indexOf(":")+1)).toFloat();
@@ -515,7 +532,7 @@ void loop() {
           digitalWrite(pump, LOW);   // Liga bomba
           config.pump = true;        // Atualiza variavel que indica estado da bomba
           pumpAuto = true;           // indica que a bomba opera em modo automático
-        }else if(hp1<= ha && pumpAuto){  // verifica se esta na hora de desligar bomba
+        }else if(hp1== ha && pumpAuto){  // verifica se esta na hora de desligar bomba
           digitalWrite(pump,HIGH); // Desliga bomba;
           config.pump = false;   // Atualiza variavel que indica estado da bomba.
           pumpAuto = false;     //Indica que a bomba deixou o modo automático.
@@ -574,13 +591,14 @@ void timeClock(){
   unsigned long currentTime = millis();
   if((currentTime - previusTimes) > SHOW_TIME_PERIOD){
     previusTimes = currentTime;
-
+    
     agora = ntp.getFormattedTime();
     hoje = ntp.getDay();
-    
+   /* 
     Serial.print(agora);
     Serial.print(" - ");
     Serial.println(hoje);
+    */
   }
 }
 
@@ -598,21 +616,23 @@ void handleUpdate(){
     if (!handleFileRead(filename))                  // send it if it exists
       serverA.send(404, "text/plain", "404: Not Found");
 }
-
+/*
 void handleIp(){
   if(serverA.argName(0).equals("meuip")){
     StaticJsonDocument<1024> doc1;
     deserializeJson(doc1,serverA.arg(0));
+    
     for(int i = 0; i<4; i++){
     config.ip[i] = doc1["ip"][i];
     config.gw[i] = doc1["gw"][i];
     config.sn[i] = doc1["sn"][i];
     }
-    config.dhcp = doc1["dhcp"];
+    //config.dhcp = doc1["dhcp"];
     saveConfig(filename, config);
     serverA.send(200, "text/plain","");
   }
-}
+}*/
+
 
 void handleProgramador(){
   
@@ -774,12 +794,13 @@ void loadConfigurator(const char* filename, Config &config){
     strlcpy(config.user,doc["user"]|"admin",sizeof(config.user));    // nome de usuário,
     strlcpy(config.led, doc["Led"]|"manual", sizeof(config.led));   // estado do Led,
     config.count = doc["count"];  ///Quantidades de programas,
+    /*
     for(int i = 0; i<4; i++){     /// IP, Gateway, Sub-Rede,
-    
     config.ip[i] = doc["ip"][i];
     config.gw[i] = doc["gw"][i];
     config.sn[i] = doc["sn"][i];
     }
+    */
 
     config.ntpServ = doc["ntpServer"]|"pool.ntp.org";
     config.port = doc["ntpPort"]|123;
@@ -819,11 +840,14 @@ void saveConfig(const char* filename, Config &conf){
     doc["hostname"] = dados.host;
     doc["pass"] = dados.pass;
     doc["user"] = dados.user;
+    /*
     for(int i = 0; i<4; i++){
      doc["ip"][i] = dados.ip[i];
      doc["gw"][i] = dados.gw[i];
      doc["sn"][i] = dados.sn[i];
     }
+    */
+
     doc["delay"] = dados.speed;
     doc["dhcp"] = dados.dhcp;
     doc["Pump"] = dados.pump;

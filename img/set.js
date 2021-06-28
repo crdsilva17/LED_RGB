@@ -27,14 +27,16 @@ function init(){
             ntpServer.value = dadosJson.ntpServer;
             port.value = dadosJson.ntpPort;
             zone.value = dadosJson.ntpZone;
-        
+            update();
+        /*
             for(var i=0; i<4; i++){
             _ip[i] = dadosJson.ip[i];
             _gw[i] = dadosJson.gw[i];
             _sn[i] = dadosJson.sn[i];
             }
+            */
 
-            if(dhc[0] != null){
+           /* if(dhc[0] != null){
               dhc[1].checked = dadosJson.dhcp;
               if(dhc[0].checked == true){
                 document.querySelector("#manualIP").style.display = "none";
@@ -57,19 +59,19 @@ function init(){
                 document.querySelector("#SR").value =  str3;
                 document.querySelector("#GT").value =  str2;              
               }
-            }
+            }*/
 
         }
     }
 
-    if(dhc != null){
+   /* if(dhc != null){
       for(var i = 0; i< dhc.length; i++){
         dhc[i].addEventListener("change",function(){meuip()}, false);
       }
-    }
+    }*/
 
 };
-
+/*
 function saveDhcp(){
   var xh = new XMLHttpRequest();
   var json;
@@ -95,13 +97,13 @@ function saveDhcp(){
   json += _sn[0]+','+_sn[1]+','+_sn[2]+','+_sn[3]+'],"dhcp":'+dhc[1].checked+'}';
   formdata.append("meuip",json);
   xh.send(formdata);
-};
+};*/
 
 function cancelDhcp(){
   window.location.replace("/set.htm");
 };
 
-
+/*
 function meuip(){
   var dhc = document.querySelectorAll('input[name="dhcp"]');
   if(dhc[1].checked == 1){
@@ -125,7 +127,7 @@ function meuip(){
   }else{
     document.querySelector("#manualIP").style.display = "none";
   }
-};
+};*/
 
 //// Função que habilita menu superior
 function myFunction() {

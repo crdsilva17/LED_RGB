@@ -30,8 +30,8 @@
         </header>
     
     <section>
-        <fieldset>
-            <legend>DHCP</legend>
+       <!-- <fieldset>
+            <legend>Endereço do Módulo</legend>
             <input type="radio" class="radiobutton" name="dhcp" id="autoDHCP" checked>
             <label class="radio" for="autoDHCP">Auto</label> <br>
             <input type="radio" class="radiobutton" name="dhcp" id="manDHCP">
@@ -44,11 +44,16 @@
                 <label for="mask">Sub-Rede</label>
                 <input type="text" id="SR" minlength="7" maxlength="15" size="15" pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$"> <br>
                 </div>
-            <input type="button" value="Salvar" onclick="saveDhcp()"> <input type="button" value="Cancelar" onclick="cancelDhcp()">
-        </fieldset>
+           <input type="button" value="Salvar" onclick="saveDhcp()"> <input type="button" value="Cancelar" onclick="cancelDhcp()">
+        </fieldset>-->
         <br>
         <fieldset>
             <legend>Horário</legend>
+
+            
+            <label for="rAtual">Relógio</label>
+            <input type="time" name="relogioAtual" id="rAtual">
+
             <label for="ntpServer">Servidor ntp</label>
             <input type="text" name="ntpServer" id="ntpServer">
 
@@ -58,8 +63,6 @@
             <label for="ntpTimezone">Timezone</label>
             <input type="number" name="ntpTimezone" id="ntpTimezone" min="-12" max="12" value="-3">
             
-            <label for="rAtual">Relógio</label>
-            <input type="time" name="relogioAtual" id="rAtual">
         
             <input type="button" value="Atualizar" onclick="update()"> <input type="button" value="Salvar" onclick="saveH()">
         </fieldset>
