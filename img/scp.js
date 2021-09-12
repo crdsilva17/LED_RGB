@@ -20,9 +20,14 @@ function init(){
         if (this.readyState == 4 && this.status == 200){
             // atualiza pagina aqui
             console.log(this.responseText);
+            try {
             dadosJson = JSON.parse(this.responseText); // Recebe dados de atualização da página
             stsPump = dadosJson.Pump; // Verifica estado da Bomba
             stsLed = dadosJson.Led;
+            } catch (error) {
+              console.log(error);
+            }
+            
 
             if(ledPanel != null){ // Caso painel de Led exista
               var colorLed = document.querySelector("#ledColor");

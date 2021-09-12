@@ -22,11 +22,16 @@ function init(){
         if (this.readyState == 4 && this.status == 200){
             // atualiza pagina aqui
             console.log(this.responseText);
-            dadosJson = JSON.parse(this.responseText); // Recebe dados de atualização da página
 
-            ntpServer.value = dadosJson.ntpServer;
-            port.value = dadosJson.ntpPort;
-            zone.value = dadosJson.ntpZone;
+            try {
+              dadosJson = JSON.parse(this.responseText); // Recebe dados de atualização da página
+              ntpServer.value = dadosJson.ntpServer;
+              port.value = dadosJson.ntpPort;
+              zone.value = dadosJson.ntpZone;
+            } catch (error) {
+              console.log(error);
+            }
+           
             update();
         /*
             for(var i=0; i<4; i++){

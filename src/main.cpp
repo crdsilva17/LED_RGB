@@ -46,7 +46,7 @@ const PROGMEM char *ntpServer = "pool.ntp.org";
 
 
 const char* update_path = "/firmware"; /*!< Path for update*/
-const char* filename = "/setting.json";
+const char* filenome = "/setting.txt";
 bool pumpAuto = false; /*!< store status pump auto*/
 bool shouldSave = false;
 unsigned long previusTime = 0; /*!< receive previus time for trigger delay */
@@ -62,9 +62,6 @@ String page = ""; /*!< Store page HTML */
 String agora = "00:00"; /*!< Store ntp time */
 short seg = 0;
 int hoje = 0; /*!< Store day of week */
-
- DynamicJsonDocument doc(8192);
-
 
 /******************************************************************
  * Classes
@@ -141,16 +138,12 @@ WiFiUDP ntpUDP;
  *      - RGB
  */
 struct Config{
-  char user[20]; /*!< username for login*/
-  char pass[16]; /*!< paasword for access*/
-  char host[20]; /*!< hostname for local access*/
+  char user[20] = "admin"; /*!< username for login*/
+  char pass[16] = "admin123"; /*!< paasword for access*/
+  char host[20] = "aqua"; /*!< hostname for local access*/
   String ntpServ ="pool.ntp.org"; /*!< Server ntp */
   int port = 123; /*!< Port value ntp>*/
   int8_t zone = -3; /*!< timeZone ntp*/
-  //IPAddress ip = {192,168,0,112}; /*!< Ip Address*/
-  //IPAddress gw = {192,168,0,1}; /*!< Gateway Address*/
-  //IPAddress sn = {255,255,255,0}; /*!< subnet address*/
-  //IPAddress dnsIp = IPAddress(170,80,225,4);
   
   RGB corLed = {0,0,0}; /*!< Struct RGB color*/
   int count = 0;   /*!< store number of timer */
@@ -158,8 +151,8 @@ struct Config{
   bool dhcp = true; /*!< state of dhcp device*/
   bool sun = false;
   char led[16];
-  bool programas [5][7];
-  String horarios [5][2];
+  int programas [5][7] = {{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0}};
+  String horarios [5][2] = {{"00:00", "00:00"},{"00:00", "00:00"},{"00:00", "00:00"},{"00:00", "00:00"},{"00:00", "00:00"}};
   unsigned int speed = 500;
 }config;
 
@@ -183,14 +176,14 @@ struct Config{
 void handleAction();
 
 /**
- * @fn loadConfigurator(const char* filename, Config &config)
+ * @fn loadConfigurator(const char* filenome, Config &config)
  * @brief read config file
  * 
- * @param filename - const char*
+ * @param filenome - const char*
  * @param config - Config
  * @return void
  * */
-void loadConfigurator(const char* filename, Config &config);
+void loadConfigurator(const char* filenome, Config &config);
 
 /**
  * @fn saveCallbackConfig()
@@ -201,14 +194,14 @@ void loadConfigurator(const char* filename, Config &config);
 void saveCallbackConfig();
 
 /**
- * @fn saveConfig(const char* filename, Config &config)
+ * @fn saveConfig(const char* filenome, Config &config)
  * @brief read config file
  * 
- * @param filename - const char*
+ * @param filenome - const char*
  * @param config - Config
  * @return void
  * */
-void saveConfig(const char* filename, Config &conf);
+void saveConfig(const char* filenome, Config &conf);
 
 /**
  * @fn handleNotFound()
@@ -251,7 +244,7 @@ bool wait();
  * */
 void timeClock();
 /**
- * @fn getContentType(String filename)
+ * @fn getContentType(String filenome)
  * @brief Convert the file extension to the MIME type
  * 
  *        set of the request type for client 
@@ -260,10 +253,10 @@ void timeClock();
  *        .js
  *        .ico
  * 
- * @param filename - String
+ * @param filenome - String
  * @return String 
  * */
-String getContentType(String filename); // convert the file extension to the MIME type
+String getContentType(String filenome); // convert the file extension to the MIME type
 
 /**
  * @fn handleFileRead(String path)
@@ -361,8 +354,8 @@ void handleReset();
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
-
-  loadConfigurator(filename, config);
+  delay(3000);
+  loadConfigurator(filenome, config);
 
   delay(1000); //Aguarda 1 segundo
  
@@ -372,17 +365,19 @@ void setup() {
   WiFiManagerParameter custom_hostname("host","hostname",config.host,sizeof(config.host));
   WiFiManagerParameter custom_pass("pass","password",config.pass, sizeof(config.pass));
   WiFiManagerParameter custom_user("user","username",config.user, sizeof(config.user));
-
+  delay(1000);
   wifimanager.setSaveConfigCallback(saveCallbackConfig);
-
+  delay(1000);
   wifimanager.addParameter(&custom_hostname);
   wifimanager.addParameter(&custom_user);
   wifimanager.addParameter(&custom_pass);
 
+  delay(3000);
+
   String mac ="_";
   mac += WiFi.macAddress();
   mac = config.host + mac;
-
+  delay(1000);
   if(!wifimanager.autoConnect(mac.c_str(), config.pass)){
     delay(3000);
     ESP.reset();
@@ -397,7 +392,7 @@ void setup() {
   strcpy(config.user,custom_user.getValue());
 
 
-  saveConfig(filename,config);
+  saveConfig(filenome,config);
 
 
   pinMode(pinR, OUTPUT); /* Set pin red as Output */
@@ -447,8 +442,7 @@ void setup() {
     if(serverA.argName(3).equals("hora")){
         agora = serverA.arg(3);
     }
-    saveConfig(filename, config);
-
+    saveConfig(filenome, config);
     serverA.send(200, "text/plain", "");
 
   });
@@ -468,7 +462,6 @@ void setup() {
   MDNS.addService("http", "tcp", 80);
   ntp.begin();
   delay(1000);
-  Serial.println("*ST: Fim da configuração");
 }
 
 
@@ -514,8 +507,7 @@ void loop() {
       }
     }
     if(oldPump != config.pump){ //Salva apenas se valor mudar
-    //atualiza arquivo Json
-    saveConfig(filename, config); 
+      saveConfig(filenome, config);
     }
   }
 
@@ -582,31 +574,32 @@ void led(RGB colorname){
 
 void handleUpdate(){
     // Envia atualização de páginas
-    if (!handleFileRead(filename))                  // send it if it exists
+    if (!handleFileRead(filenome))                  // send it if it exists
       serverA.send(404, "text/plain", "404: Not Found");
 }
 
 void handleProgramador(){
   
   if(serverA.argName(0).equals("prog")){
-    ///StaticJsonDocument<1024> doc;
-    DeserializationError error = deserializeJson(doc, serverA.arg(0));
+    DynamicJsonDocument doc1(1024);
+    DeserializationError error = deserializeJson(doc1, serverA.arg(0));
     if(error) Serial.println("Failed to read file, using default config");
-    copyArray(doc["pgr"].as<JsonArray>(), config.programas);
+    copyArray(doc1["pgr"], config.programas);
+    serializeJsonPretty(doc1, Serial);
   }
   if(serverA.argName(1).equals("hora")){
-    ///StaticJsonDocument<1024> doc;
-    DeserializationError error = deserializeJson(doc, serverA.arg(1));
+    DynamicJsonDocument doc2(1024);
+    DeserializationError error = deserializeJson(doc2, serverA.arg(1));
     if(error) Serial.println("Failed to read file, using default config");
-    copyArray(doc["hr"].as<JsonArray>(), config.horarios);
+    copyArray(doc2["hr"], config.horarios);
   }
   if(serverA.argName(2).equals("count")){
-    ///StaticJsonDocument<1024> doc;
-    DeserializationError error = deserializeJson(doc, serverA.arg(2));
+    StaticJsonDocument<256> doc3;
+    DeserializationError error = deserializeJson(doc3, serverA.arg(2));
     if(error) Serial.println("Failed to read file, using default config");
-    config.count = doc["count"];
+    config.count = doc3["count"];
   }
-  saveConfig(filename, config);
+  saveConfig(filenome, config);
   serverA.send(200, "text/plain","");
 }
 
@@ -625,8 +618,8 @@ void handleActionPump(){
         config.pump = false;
       }
     }
+    saveConfig(filenome, config);
     serverA.send(200,"text/plain","");
-    saveConfig(filename, config);
   }
 
 void handleActionLed(){
@@ -648,13 +641,15 @@ void handleActionLed(){
     }
   
   } 
+  
+  saveConfig(filenome, config);
   serverA.send(200, "text/plain","");
-  saveConfig(filename, config);
 
 }
 
 //Trata as ações de reset do módulo
 void handleReset(){
+  Serial.println(serverA.arg(0));
   if(serverA.argName(0).equals("reset")){ // Verifica nome de dados recebidos
     if(serverA.arg(0).equals("again")){ // Aqui reinicia módulo mantendo dados
       serverA.send(200, "text/plain","Reset Device...");
@@ -663,11 +658,16 @@ void handleReset(){
       delay(1000);
     }else if(serverA.arg(0).equals("default")){ // Aqui reinicia módulo ao padrão de fábrica
       serverA.send(200,"text/plain", "Default Reset....");
-      delay(1000);
-      wifimanager.resetSettings();
-      if(SPIFFS.remove(filename)) Serial.println("Arquivos Deletados");
+      Serial.println("aqui");
+      delay(3000);
+      ESP.eraseConfig();
+      Serial.println("Desconectou");
+      delay(3000);
+      if(SPIFFS.remove(filenome)) Serial.println("Arquivos Deletados");
+      Serial.println("resetou");
+      delay(3000);
       ESP.reset();
-      delay(1000);
+      delay(5000);
     }
   }
 }
@@ -697,12 +697,12 @@ int strToByte(String str){
   return (p1 + p2);
 }
 
-String getContentType(String filename) { // convert the file extension to the MIME type
-  if (filename.endsWith(".htm")) return "text/html";
-  else if (filename.endsWith(".css")) return "text/css";
-  else if (filename.endsWith(".js")) return "application/javascript";
-  else if (filename.endsWith(".ico")) return "image/x-icon";
-  else if (filename.endsWith(".json")) return "application/json";
+String getContentType(String filenome) { // convert the file extension to the MIME type
+  if (filenome.endsWith(".htm")) return "text/html";
+  else if (filenome.endsWith(".css")) return "text/css";
+  else if (filenome.endsWith(".js")) return "application/javascript";
+  else if (filenome.endsWith(".ico")) return "image/x-icon";
+  else if (filenome.endsWith(".json")) return "application/json";
   return "text/plain";
 }
 
@@ -712,13 +712,14 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
   if(SPIFFS.begin()){
   if (SPIFFS.exists(path)) {                            // If the file exists
     File file = SPIFFS.open(path, "r");                 // Open it
+    delay(500);
     size_t sent = serverA.streamFile(file, contentType); // And send it to the client
     file.close(); 
     SPIFFS.end();                                      // Then close the file again
     return true;
   }else{
     path += ".gz";
-    File file = SPIFFS.open(path, "r");                 // Open it
+    File file   = SPIFFS.open(path, "r");                 // Open it
     size_t sent = serverA.streamFile(file, contentType); // And send it to the client
     file.close(); 
     SPIFFS.end();                                      // Then close the file again
@@ -730,102 +731,92 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
 }
 
 ///Carrega configurações previamente salvas
-void loadConfigurator(const char* filename, Config &config){
-
+void loadConfigurator(const char* filenome, Config &conf){
+  Serial.println("Iniciando Leitura.");
+  DynamicJsonDocument doc(2048);
+  Config dados = conf;
   if(SPIFFS.begin()){ ///inicializa sistema de arquivos
     File file;
-    if(SPIFFS.exists(filename)){ // Verifica existencia de arquivo
-      file = SPIFFS.open(filename, "r");  //Existindo abre em modo de leitura
+    if(SPIFFS.exists(filenome)){ // Verifica existencia de arquivo
+      file = SPIFFS.open(filenome, "r");  //Existindo abre em modo de leitura
     }else{
-      file = SPIFFS.open(filename,"w"); /// caso contrário cria arquivo para escrita de valores.
+      file = SPIFFS.open(filenome,"w"); /// caso contrário cria arquivo para escrita de valores.
     }
     DeserializationError error = deserializeJson(doc,file); // formata em modelo Json
     if(error) Serial.println("Failed to read file, using default config");
-
-    strlcpy(config.host,doc["hostname"]|"aqua",sizeof(config.host)); //Grava dados de hostname,
-    strlcpy(config.pass,doc["pass"]|"admin123",sizeof(config.pass)); // Senha de acesso para atualização,
-    strlcpy(config.user,doc["user"]|"admin",sizeof(config.user));    // nome de usuário,
-    strlcpy(config.led, doc["Led"]|"manual", sizeof(config.led));   // estado do Led,
-    config.count = doc["count"];  ///Quantidades de programas,
-    /*
-    for(int i = 0; i<4; i++){     /// IP, Gateway, Sub-Rede,
-    config.ip[i] = doc["ip"][i];
-    config.gw[i] = doc["gw"][i];
-    config.sn[i] = doc["sn"][i];
-    }
-    */
-
-    config.ntpServ = doc["ntpServer"]|"pool.ntp.org";
-    config.port = doc["ntpPort"]|123;
-    config.zone = doc["ntpZone"]|-3;
-
-    config.sun = doc["sun"];
-    config.speed = doc["delay"]|10; //atualiza velocidade de transição na cor dos leds
-    config.dhcp = doc["dhcp"]|true; // dados de dhcp manual ou automático,
-    config.pump = doc["Pump"];      // estado da bomba (on ou Off),
-    config.corLed.r = doc["cor_r"];  ///intenciadade da cor vermelha no led,
-    config.corLed.g = doc["cor_g"]; //intencidade da cor verde no led,
-    config.corLed.b = doc["cor_b"]; //intencidade da cor azul no led,
-
-    copyArray(doc["pgr"].as<JsonArray>(),config.programas); // Programações da bomba e 
-
-    copyArray(doc["hr"].as<JsonArray>(), config.horarios);   // horarios de ativação da bomba.
-
-    //serializeJsonPretty(doc, Serial);
-
+    
     file.close();
     SPIFFS.end();
+
+    delay(500);
+    strlcpy(dados.host,doc["hostname"]|"aqua",sizeof(dados.host)); //Grava dados de hostname,
+    strlcpy(dados.pass,doc["pass"]|"admin123",sizeof(dados.pass)); // Senha de acesso para atualização,
+    strlcpy(dados.user,doc["user"]|"admin",sizeof(dados.user));    // nome de usuário,
+    strlcpy(dados.led, doc["Led"]|"manual", sizeof(dados.led));   // estado do Led,
+
+    dados.count    = doc["count"];  ///Quantidades de programas,
+    dados.ntpServ  = doc["ntpServer"]|"pool.ntp.org";
+    dados.port     = doc["ntpPort"]|123;
+    dados.zone     = doc["ntpZone"]|-3;
+    dados.sun      = doc["sun"];
+    dados.speed    = doc["delay"]|500; //atualiza velocidade de transição na cor dos leds
+    dados.dhcp     = doc["dhcp"]|true; // dados de dhcp manual ou automático,
+    dados.pump     = doc["Pump"];      // estado da bomba (on ou Off),
+    dados.corLed.r = doc["cor_r"];  ///intenciadade da cor vermelha no led,
+    dados.corLed.g = doc["cor_g"]; //intencidade da cor verde no led,
+    dados.corLed.b = doc["cor_b"]; //intencidade da cor azul no led,
+
+    copyArray(doc["pgr"],dados.programas); // Programações da bomba e 
+    copyArray(doc["hr"], dados.horarios);   // horarios de ativação da bomba.
+
+    Serial.print("memoria_usada0: ");
+    Serial.println(doc.memoryUsage());
   }
 
 }
 
 
 //Salva dados de configuração do módulo
-void saveConfig(const char* filename, Config &conf){
-
+void saveConfig(const char* filenome, Config &conf){
   Config dados = conf;
-  
   if(SPIFFS.begin()){
-    if(SPIFFS.exists(filename)){
-      SPIFFS.remove(filename);
+    if(SPIFFS.exists(filenome)){ // Verifica se arquivo existe
+      SPIFFS.remove(filenome);   // Exclui arquivo para reescrever
     }
-    File file = SPIFFS.open(filename,"w");
-    if(!file){
+    File file1 = SPIFFS.open(filenome,"w"); // Abre arquivo em modo de escrita
+    if(!file1){
       SPIFFS.end();
       return;
     }
-   /// StaticJsonDocument<2048> doc;
-    doc["hostname"] = dados.host;
-    doc["pass"] = dados.pass;
-    doc["user"] = dados.user;
-    /*
-    for(int i = 0; i<4; i++){
-     doc["ip"][i] = dados.ip[i];
-     doc["gw"][i] = dados.gw[i];
-     doc["sn"][i] = dados.sn[i];
-    }
-    */
+    
+    DynamicJsonDocument doc(2048); //cria JsonDocument para serializar dados
 
-    doc["delay"] = dados.speed;
-    doc["dhcp"] = dados.dhcp;
-    doc["Pump"] = dados.pump;
-    doc["cor_r"] = dados.corLed.r;
-    doc["cor_g"] = dados.corLed.g;
-    doc["cor_b"] = dados.corLed.b;
-    doc["Led"] = dados.led;
-    doc["count"] = dados.count;
-    doc["sun"] = dados.sun;
-    doc["ntpServer"] = dados.ntpServ;
-    doc["ntpPort"] = dados.port;
-    doc["ntpZone"] = dados.zone;
-    copyArray(dados.programas, doc["pgr"].to<JsonArray>());
+    doc["hostname"]   = dados.host;
+    doc["pass"]       = dados.pass;
+    doc["user"]       = dados.user;
+    doc["delay"]      = dados.speed;
+    doc["dhcp"]       = dados.dhcp;
+    doc["Pump"]       = dados.pump;
+    doc["cor_r"]      = dados.corLed.r;
+    doc["cor_g"]      = dados.corLed.g;
+    doc["cor_b"]      = dados.corLed.b;
+    doc["Led"]        = dados.led;
+    doc["count"]      = dados.count;
+    doc["sun"]        = dados.sun;
+    doc["ntpServer"]  = dados.ntpServ;
+    doc["ntpPort"]    = dados.port;
+    doc["ntpZone"]    = dados.zone;
 
-    copyArray(dados.horarios, doc["hr"].to<JsonArray>());
-   
-    if(serializeJson(doc,file) == 0){
+    copyArray(dados.programas, doc["pgr"]);
+    copyArray(dados.horarios, doc["hr"]);
+    Serial.print("memoria_usada: ");
+    Serial.println(doc.memoryUsage());
+    delay(500);
+    if(serializeJson(doc,file1) == 0){
       Serial.println("Error!");
     }
-    file.close();
+
+    file1.close();
     SPIFFS.end();
   }
 }
