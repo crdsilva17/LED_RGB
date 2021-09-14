@@ -39,29 +39,30 @@
 /**************************************************************
  * GLOBAL VARIABLES
  **************************************************************/
-int8_t timeZone = -3;
-int8_t minutesTimeZone = 0;
-int8_t ntpPort = 123;
+int8_t timeZone               = -3;
+int8_t minutesTimeZone        = 0;
+int8_t ntpPort                = 123;
 const PROGMEM char *ntpServer = "pool.ntp.org";
-
-
-const char* update_path = "/firmware"; /*!< Path for update*/
-const char* filenome = "/setting.txt";
-bool pumpAuto = false; /*!< store status pump auto*/
-bool shouldSave = false;
-unsigned long previusTime = 0; /*!< receive previus time for trigger delay */
-unsigned long previusTimes = 0; /*!< receive previus time for trigger delay ntp */
+const char* update_path       = "/firmware"; /*!< Path for update*/
+const char* file1             = "/home.txt";
+const char* file2             = "/led.txt";
+const char* file3             = "/prog.txt";
+const char* file4             = "/conf.txt";
+bool pumpAuto                 = false; /*!< store status pump auto*/
+bool shouldSave               = false;
+unsigned long previusTime     = 0; /*!< receive previus time for trigger delay */
+unsigned long previusTimes    = 0; /*!< receive previus time for trigger delay ntp */
 File uploadFile; /*!< Store data for SPIFFS readed*/
-int pinR = 12; /*!< Set pin red as number 12 */
-int pinG = 13; /*!< Set pin green as number 13 */
-int pinB = 14; /*!< Set pin blue as number 14 */
-int pump = 5; ///< define pin of pump
-int btnPump = 4; /// define ldr sensor   
-int prog = 0;  //Define program run
-String page = ""; /*!< Store page HTML */
-String agora = "00:00"; /*!< Store ntp time */
-short seg = 0;
-int hoje = 0; /*!< Store day of week */
+int pinR                      = 12; /*!< Set pin red as number 12 */
+int pinG                      = 13; /*!< Set pin green as number 13 */
+int pinB                      = 14; /*!< Set pin blue as number 14 */
+int pump                      = 5; ///< define pin of pump
+int btnPump                   = 4; /// define ldr sensor   
+int prog                      = 0;  //Define program run
+String page                   = ""; /*!< Store page HTML */
+String agora                  = "00:00"; /*!< Store ntp time */
+short seg                     = 0;
+int hoje                      = 0; /*!< Store day of week */
 
 /******************************************************************
  * Classes
@@ -138,22 +139,20 @@ WiFiUDP ntpUDP;
  *      - RGB
  */
 struct Config{
-  char user[20] = "admin"; /*!< username for login*/
-  char pass[16] = "admin123"; /*!< paasword for access*/
-  char host[20] = "aqua"; /*!< hostname for local access*/
-  String ntpServ ="pool.ntp.org"; /*!< Server ntp */
-  int port = 123; /*!< Port value ntp>*/
-  int8_t zone = -3; /*!< timeZone ntp*/
-  
-  RGB corLed = {0,0,0}; /*!< Struct RGB color*/
-  int count = 0;   /*!< store number of timer */
-  bool pump = false; /*!< state pump pool*/
-  bool dhcp = true; /*!< state of dhcp device*/
-  bool sun = false;
-  char led[16];
-  int programas [5][7] = {{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0}};
-  String horarios [5][2] = {{"00:00", "00:00"},{"00:00", "00:00"},{"00:00", "00:00"},{"00:00", "00:00"},{"00:00", "00:00"}};
-  unsigned int speed = 500;
+  char user[20]           = "admin"; /*!< username for login*/
+  char pass[16]           = "admin123"; /*!< paasword for access*/
+  char host[20]           = "aqua"; /*!< hostname for local access*/
+  String ntpServ          ="pool.ntp.org"; /*!< Server ntp */
+  int port                = 123; /*!< Port value ntp>*/
+  int8_t zone             = -3; /*!< timeZone ntp*/
+  RGB corLed              = {0,0,0}; /*!< Struct RGB color*/
+  int count               = 0;   /*!< store number of timer */
+  bool pump               = false; /*!< state pump pool*/
+  bool sun                = false;
+  char led[16]            = "manual";
+  int programas [5][7]    = {{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0}};
+  String horarios [5][2]  = {{"00:00", "00:00"},{"00:00", "00:00"},{"00:00", "00:00"},{"00:00", "00:00"},{"00:00", "00:00"}};
+  unsigned int speed      = 500;
 }config;
 
 
@@ -352,32 +351,38 @@ void handleReset();
  *        put all configuration setup of device
  * */
 void setup() {
-  // put your setup code here, to run once:
+  
   Serial.begin(9600);
-  delay(3000);
-  loadConfigurator(filenome, config);
 
-  delay(1000); //Aguarda 1 segundo
+  delay(3000);
+  loadConfigurator(file1, config);
+  delay(1000);
+  loadConfigurator(file2, config);
+  delay(1000);
+  loadConfigurator(file3, config);
+  delay(1000);
+  loadConfigurator(file4, config);
+  delay(3000); //Aguarda 3 segundo
  
 
 
   //Parameters of setting
   WiFiManagerParameter custom_hostname("host","hostname",config.host,sizeof(config.host));
-  WiFiManagerParameter custom_pass("pass","password",config.pass, sizeof(config.pass));
-  WiFiManagerParameter custom_user("user","username",config.user, sizeof(config.user));
+  //WiFiManagerParameter custom_pass("pass","password",config.pass, sizeof(config.pass));
+  //WiFiManagerParameter custom_user("user","username",config.user, sizeof(config.user));
   delay(1000);
   wifimanager.setSaveConfigCallback(saveCallbackConfig);
-  delay(1000);
+  delay(3000);
   wifimanager.addParameter(&custom_hostname);
-  wifimanager.addParameter(&custom_user);
-  wifimanager.addParameter(&custom_pass);
+  //wifimanager.addParameter(&custom_user);
+  //wifimanager.addParameter(&custom_pass);
 
   delay(3000);
 
   String mac ="_";
   mac += WiFi.macAddress();
   mac = config.host + mac;
-  delay(1000);
+  delay(3000);
   if(!wifimanager.autoConnect(mac.c_str(), config.pass)){
     delay(3000);
     ESP.reset();
@@ -388,12 +393,14 @@ void setup() {
 
   //Copy values and store in struct
   strcpy(config.host,custom_hostname.getValue());
-  strcpy(config.pass,custom_pass.getValue());
-  strcpy(config.user,custom_user.getValue());
+  //strcpy(config.pass,custom_pass.getValue());
+  //strcpy(config.user,custom_user.getValue());
 
 
-  saveConfig(filenome,config);
-
+  saveConfig(file1,config);
+  saveConfig(file2,config);
+  saveConfig(file3,config);
+  saveConfig(file4,config);
 
   pinMode(pinR, OUTPUT); /* Set pin red as Output */
   pinMode(pinG, OUTPUT); /* Set pin green as Output */
@@ -442,7 +449,7 @@ void setup() {
     if(serverA.argName(3).equals("hora")){
         agora = serverA.arg(3);
     }
-    saveConfig(filenome, config);
+    saveConfig(file4, config);
     serverA.send(200, "text/plain", "");
 
   });
@@ -495,11 +502,11 @@ void loop() {
         hp += mp/60;
         hp1 += mp1/60;
 
-        if(hp <= ha && hp1> ha){ // Verifica se horário atual esta no intervalo de bomba ligada
+        if(hp <= ha && hp1> ha && !config.pump){ // Verifica se horário atual esta no intervalo de bomba ligada
           digitalWrite(pump, LOW);   // Liga bomba
           config.pump = true;        // Atualiza variavel que indica estado da bomba
           pumpAuto = true;           // indica que a bomba opera em modo automático
-        }else if(hp1== ha && pumpAuto){  // verifica se esta na hora de desligar bomba
+        }else if(hp1<= ha && pumpAuto){  // verifica se esta na hora de desligar bomba
           digitalWrite(pump,HIGH); // Desliga bomba;
           config.pump = false;   // Atualiza variavel que indica estado da bomba.
           pumpAuto = false;     //Indica que a bomba deixou o modo automático.
@@ -507,7 +514,8 @@ void loop() {
       }
     }
     if(oldPump != config.pump){ //Salva apenas se valor mudar
-      saveConfig(filenome, config);
+      saveConfig(file1, config);
+       saveConfig(file2, config);
     }
   }
 
@@ -574,7 +582,7 @@ void led(RGB colorname){
 
 void handleUpdate(){
     // Envia atualização de páginas
-    if (!handleFileRead(filenome))                  // send it if it exists
+    if (!handleFileRead(page))                  // send it if it exists
       serverA.send(404, "text/plain", "404: Not Found");
 }
 
@@ -585,7 +593,6 @@ void handleProgramador(){
     DeserializationError error = deserializeJson(doc1, serverA.arg(0));
     if(error) Serial.println("Failed to read file, using default config");
     copyArray(doc1["pgr"], config.programas);
-    serializeJsonPretty(doc1, Serial);
   }
   if(serverA.argName(1).equals("hora")){
     DynamicJsonDocument doc2(1024);
@@ -599,7 +606,7 @@ void handleProgramador(){
     if(error) Serial.println("Failed to read file, using default config");
     config.count = doc3["count"];
   }
-  saveConfig(filenome, config);
+  saveConfig(file3, config);
   serverA.send(200, "text/plain","");
 }
 
@@ -618,13 +625,13 @@ void handleActionPump(){
         config.pump = false;
       }
     }
-    saveConfig(filenome, config);
+    saveConfig(file1, config);
+     saveConfig(file2, config);
     serverA.send(200,"text/plain","");
   }
 
 void handleActionLed(){
   //ativar led
-
   if(serverA.argName(0).equals("cor")){
     config.corLed.r = strToByte(serverA.arg(0).substring(1,3)); // get red color 
     config.corLed.g = strToByte(serverA.arg(0).substring(3,5)); // get green color 
@@ -642,14 +649,14 @@ void handleActionLed(){
   
   } 
   
-  saveConfig(filenome, config);
+  saveConfig(file2, config);
+   saveConfig(file1, config);
   serverA.send(200, "text/plain","");
 
 }
 
 //Trata as ações de reset do módulo
 void handleReset(){
-  Serial.println(serverA.arg(0));
   if(serverA.argName(0).equals("reset")){ // Verifica nome de dados recebidos
     if(serverA.arg(0).equals("again")){ // Aqui reinicia módulo mantendo dados
       serverA.send(200, "text/plain","Reset Device...");
@@ -658,13 +665,13 @@ void handleReset(){
       delay(1000);
     }else if(serverA.arg(0).equals("default")){ // Aqui reinicia módulo ao padrão de fábrica
       serverA.send(200,"text/plain", "Default Reset....");
-      Serial.println("aqui");
       delay(3000);
       ESP.eraseConfig();
-      Serial.println("Desconectou");
       delay(3000);
-      if(SPIFFS.remove(filenome)) Serial.println("Arquivos Deletados");
-      Serial.println("resetou");
+
+      if(SPIFFS.remove(file1) && SPIFFS.remove(file2) && SPIFFS.remove(file3) && SPIFFS.remove(file4)) 
+      Serial.println("Arquivos Deletados");
+
       delay(3000);
       ESP.reset();
       delay(5000);
@@ -707,7 +714,24 @@ String getContentType(String filenome) { // convert the file extension to the MI
 }
 
 bool handleFileRead(String path) { // send the right file to the client (if it exists)
-  if (path.endsWith("/")) path += "index.htm";         // If a folder is requested, send the index file
+  if (path.endsWith("/"))
+  { 
+    path += "index.htm";         // If a folder is requested, send the index file
+    page = file1;
+  }else if(path.equals("/confi.htm"))
+  {
+    page = file3;
+  }else if(path.equals("/led.htm"))
+  {
+    page = file2;
+  }else if(path.equals("/set.htm"))
+  {
+    page = file4;
+  }else if(path.equals("/index.htm"))
+  {
+    page = file1;
+  }
+
   String contentType = getContentType(path);            // Get the MIME type
   if(SPIFFS.begin()){
   if (SPIFFS.exists(path)) {                            // If the file exists
@@ -732,9 +756,9 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
 
 ///Carrega configurações previamente salvas
 void loadConfigurator(const char* filenome, Config &conf){
-  Serial.println("Iniciando Leitura.");
   DynamicJsonDocument doc(2048);
   Config dados = conf;
+  
   if(SPIFFS.begin()){ ///inicializa sistema de arquivos
     File file;
     if(SPIFFS.exists(filenome)){ // Verifica existencia de arquivo
@@ -749,28 +773,39 @@ void loadConfigurator(const char* filenome, Config &conf){
     SPIFFS.end();
 
     delay(500);
+    if(strcmp(filenome,file1) == 0)
+    {
     strlcpy(dados.host,doc["hostname"]|"aqua",sizeof(dados.host)); //Grava dados de hostname,
-    strlcpy(dados.pass,doc["pass"]|"admin123",sizeof(dados.pass)); // Senha de acesso para atualização,
-    strlcpy(dados.user,doc["user"]|"admin",sizeof(dados.user));    // nome de usuário,
-    strlcpy(dados.led, doc["Led"]|"manual", sizeof(dados.led));   // estado do Led,
-
-    dados.count    = doc["count"];  ///Quantidades de programas,
-    dados.ntpServ  = doc["ntpServer"]|"pool.ntp.org";
-    dados.port     = doc["ntpPort"]|123;
-    dados.zone     = doc["ntpZone"]|-3;
-    dados.sun      = doc["sun"];
-    dados.speed    = doc["delay"]|500; //atualiza velocidade de transição na cor dos leds
-    dados.dhcp     = doc["dhcp"]|true; // dados de dhcp manual ou automático,
     dados.pump     = doc["Pump"];      // estado da bomba (on ou Off),
+    strlcpy(dados.led, doc["Led"]|"manual", sizeof(dados.led));   // estado do Led,
     dados.corLed.r = doc["cor_r"];  ///intenciadade da cor vermelha no led,
     dados.corLed.g = doc["cor_g"]; //intencidade da cor verde no led,
     dados.corLed.b = doc["cor_b"]; //intencidade da cor azul no led,
 
-    copyArray(doc["pgr"],dados.programas); // Programações da bomba e 
-    copyArray(doc["hr"], dados.horarios);   // horarios de ativação da bomba.
+    }else if(strcmp(filenome, file2) == 0)
+    {
+    strlcpy(dados.led, doc["Led"]|"manual", sizeof(dados.led));   // estado do Led,
+    dados.sun      = doc["sun"];
+    dados.speed    = doc["delay"]|500; //atualiza velocidade de transição na cor dos leds
+    dados.corLed.r = doc["cor_r"];  ///intenciadade da cor vermelha no led,
+    dados.corLed.g = doc["cor_g"]; //intencidade da cor verde no led,
+    dados.corLed.b = doc["cor_b"]; //intencidade da cor azul no led,
 
-    Serial.print("memoria_usada0: ");
-    Serial.println(doc.memoryUsage());
+    }else if(strcmp(filenome,file3) == 0)
+    {
+      copyArray(doc["pgr"],dados.programas); // Programações da bomba e 
+      copyArray(doc["hr"], dados.horarios);   // horarios de ativação da bomba.
+      dados.count    = doc["count"];  ///Quantidades de programas,
+
+
+    }else if(strcmp(filenome,file4) == 0)
+    {
+      dados.ntpServ  = doc["ntpServer"]|"pool.ntp.org";
+      dados.port     = doc["ntpPort"]|123;
+      dados.zone     = doc["ntpZone"]|-3;
+
+    }
+   
   }
 
 }
@@ -783,40 +818,52 @@ void saveConfig(const char* filenome, Config &conf){
     if(SPIFFS.exists(filenome)){ // Verifica se arquivo existe
       SPIFFS.remove(filenome);   // Exclui arquivo para reescrever
     }
-    File file1 = SPIFFS.open(filenome,"w"); // Abre arquivo em modo de escrita
-    if(!file1){
+    File file = SPIFFS.open(filenome,"w"); // Abre arquivo em modo de escrita
+    if(!file){
       SPIFFS.end();
       return;
     }
     
     DynamicJsonDocument doc(2048); //cria JsonDocument para serializar dados
 
-    doc["hostname"]   = dados.host;
-    doc["pass"]       = dados.pass;
-    doc["user"]       = dados.user;
-    doc["delay"]      = dados.speed;
-    doc["dhcp"]       = dados.dhcp;
-    doc["Pump"]       = dados.pump;
-    doc["cor_r"]      = dados.corLed.r;
-    doc["cor_g"]      = dados.corLed.g;
-    doc["cor_b"]      = dados.corLed.b;
-    doc["Led"]        = dados.led;
-    doc["count"]      = dados.count;
-    doc["sun"]        = dados.sun;
-    doc["ntpServer"]  = dados.ntpServ;
-    doc["ntpPort"]    = dados.port;
-    doc["ntpZone"]    = dados.zone;
+    if(strcmp(filenome,file1) == 0)
+    {
+      doc["hostname"]   = dados.host;
+      doc["Pump"]       = dados.pump;
+      doc["Led"]        = dados.led;
+      doc["cor_r"]      = dados.corLed.r;
+      doc["cor_g"]      = dados.corLed.g;
+      doc["cor_b"]      = dados.corLed.b;
 
-    copyArray(dados.programas, doc["pgr"]);
-    copyArray(dados.horarios, doc["hr"]);
-    Serial.print("memoria_usada: ");
-    Serial.println(doc.memoryUsage());
+    }else if(strcmp(filenome,file2) == 0)
+    {
+      doc["delay"]      = dados.speed;
+      doc["cor_r"]      = dados.corLed.r;
+      doc["cor_g"]      = dados.corLed.g;
+      doc["cor_b"]      = dados.corLed.b;
+      doc["sun"]        = dados.sun;
+      doc["Led"]        = dados.led;
+
+    }else if(strcmp(filenome,file4) == 0)
+    {
+      doc["ntpServer"]  = dados.ntpServ;
+      doc["ntpPort"]    = dados.port;
+      doc["ntpZone"]    = dados.zone;
+
+    }else if(strcmp(filenome,file3) == 0)
+    {
+      copyArray(dados.programas, doc["pgr"]);
+      copyArray(dados.horarios, doc["hr"]);
+      doc["count"]      = dados.count;
+    
+    }
+
     delay(500);
-    if(serializeJson(doc,file1) == 0){
+    if(serializeJson(doc,file) == 0){
       Serial.println("Error!");
     }
 
-    file1.close();
+    file.close();
     SPIFFS.end();
   }
 }
