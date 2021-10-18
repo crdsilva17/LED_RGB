@@ -44,10 +44,9 @@ int8_t minutesTimeZone        = 0;
 int8_t ntpPort                = 123;
 const PROGMEM char *ntpServer = "pool.ntp.org";
 const char* update_path       = "/firmware"; /*!< Path for update*/
-const char* file1             = "/home.txt";
-const char* file2             = "/led.txt";
-const char* file3             = "/prog.txt";
-const char* file4             = "/conf.txt";
+const char* file1             = "/home.json";
+const char* file2             = "/prog.json";
+const char* file3             = "/conf.json";
 bool pumpAuto                 = false; /*!< store status pump auto*/
 bool shouldSave               = false;
 unsigned long previusTime     = 0; /*!< receive previus time for trigger delay */
@@ -352,7 +351,7 @@ void handleReset();
  * */
 void setup() {
   
-  Serial.begin(9600);
+  //Serial.begin(9600);
 
   delay(3000);
   loadConfigurator(file1, config);
@@ -360,22 +359,14 @@ void setup() {
   loadConfigurator(file2, config);
   delay(1000);
   loadConfigurator(file3, config);
-  delay(1000);
-  loadConfigurator(file4, config);
   delay(3000); //Aguarda 3 segundo
- 
-
 
   //Parameters of setting
   WiFiManagerParameter custom_hostname("host","hostname",config.host,sizeof(config.host));
-  //WiFiManagerParameter custom_pass("pass","password",config.pass, sizeof(config.pass));
-  //WiFiManagerParameter custom_user("user","username",config.user, sizeof(config.user));
   delay(1000);
   wifimanager.setSaveConfigCallback(saveCallbackConfig);
   delay(3000);
   wifimanager.addParameter(&custom_hostname);
-  //wifimanager.addParameter(&custom_user);
-  //wifimanager.addParameter(&custom_pass);
 
   delay(3000);
 
@@ -393,14 +384,11 @@ void setup() {
 
   //Copy values and store in struct
   strcpy(config.host,custom_hostname.getValue());
-  //strcpy(config.pass,custom_pass.getValue());
-  //strcpy(config.user,custom_user.getValue());
 
 
   saveConfig(file1,config);
   saveConfig(file2,config);
   saveConfig(file3,config);
-  saveConfig(file4,config);
 
   pinMode(pinR, OUTPUT); /* Set pin red as Output */
   pinMode(pinG, OUTPUT); /* Set pin green as Output */
@@ -449,7 +437,7 @@ void setup() {
     if(serverA.argName(3).equals("hora")){
         agora = serverA.arg(3);
     }
-    saveConfig(file4, config);
+    saveConfig(file3, config);
     serverA.send(200, "text/plain", "");
 
   });
@@ -478,12 +466,12 @@ void loop() {
   float mp, mp1, ma;
   
   serverA.handleClient();
-
   MDNS.update();
-
+  delayMicroseconds(50);
   if(ntp.update()){
     timeClock();
   }
+  delayMicroseconds(50);
 
   ha = agora.substring(0, agora.indexOf(":")).toFloat();
   ma = agora.substring(agora.indexOf(":")+1,agora.indexOf(":",agora.indexOf(":")+1)).toFloat();
@@ -501,7 +489,6 @@ void loop() {
         mp1 = config.horarios[i][1].substring(config.horarios[i][1].indexOf(":") + 1).toFloat();
         hp += mp/60;
         hp1 += mp1/60;
-
         if(hp <= ha && hp1> ha && !config.pump){ // Verifica se horário atual esta no intervalo de bomba ligada
           digitalWrite(pump, LOW);   // Liga bomba
           config.pump = true;        // Atualiza variavel que indica estado da bomba
@@ -515,10 +502,8 @@ void loop() {
     }
     if(oldPump != config.pump){ //Salva apenas se valor mudar
       saveConfig(file1, config);
-       saveConfig(file2, config);
     }
   }
-
   if((config.sun && (ha > 18.5 || ha < 6.0))|| !config.sun){
   if(String(config.led).indexOf("sequencia") != -1 && wait()){
     if(config.corLed.r == 0 && config.corLed.g == 0 && config.corLed.b == 0){
@@ -535,6 +520,10 @@ void loop() {
       config.corLed = {255, 255, 0};
     }else if(config.corLed.r == 255 && config.corLed.g == 255 && config.corLed.b == 0){
       config.corLed = {255, 0, 0};
+    }else{
+      config.corLed.r = 0;
+      config.corLed.g = 0;
+      config.corLed.b = 0;
     }
     led(config.corLed);
   }
@@ -568,6 +557,7 @@ void timeClock(){
 
     agora = ntp.getFormattedTime();
     hoje = ntp.getDay();
+    saveConfig(file3, config);
   }
 }
 
@@ -606,7 +596,7 @@ void handleProgramador(){
     if(error) Serial.println("Failed to read file, using default config");
     config.count = doc3["count"];
   }
-  saveConfig(file3, config);
+  saveConfig(file2, config);
   serverA.send(200, "text/plain","");
 }
 
@@ -626,7 +616,6 @@ void handleActionPump(){
       }
     }
     saveConfig(file1, config);
-     saveConfig(file2, config);
     serverA.send(200,"text/plain","");
   }
 
@@ -648,8 +637,6 @@ void handleActionLed(){
     }
   
   } 
-  
-  saveConfig(file2, config);
    saveConfig(file1, config);
   serverA.send(200, "text/plain","");
 
@@ -669,7 +656,7 @@ void handleReset(){
       ESP.eraseConfig();
       delay(3000);
 
-      if(SPIFFS.remove(file1) && SPIFFS.remove(file2) && SPIFFS.remove(file3) && SPIFFS.remove(file4)) 
+      if(SPIFFS.remove(file1) && SPIFFS.remove(file2) && SPIFFS.remove(file3)) 
       Serial.println("Arquivos Deletados");
 
       delay(3000);
@@ -720,14 +707,11 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
     page = file1;
   }else if(path.equals("/confi.htm"))
   {
-    page = file3;
-  }else if(path.equals("/led.htm"))
-  {
     page = file2;
   }else if(path.equals("/set.htm"))
   {
-    page = file4;
-  }else if(path.equals("/index.htm"))
+    page = file3;
+  }else if(path.equals("/index.htm") || path.equals("/led.htm"))
   {
     page = file1;
   }
@@ -755,9 +739,8 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
 }
 
 ///Carrega configurações previamente salvas
-void loadConfigurator(const char* filenome, Config &conf){
-  DynamicJsonDocument doc(2048);
-  Config dados = conf;
+void loadConfigurator(const char* filenome, Config &dados){
+  StaticJsonDocument<1024> doc;
   
   if(SPIFFS.begin()){ ///inicializa sistema de arquivos
     File file;
@@ -767,38 +750,28 @@ void loadConfigurator(const char* filenome, Config &conf){
       file = SPIFFS.open(filenome,"w"); /// caso contrário cria arquivo para escrita de valores.
     }
     DeserializationError error = deserializeJson(doc,file); // formata em modelo Json
-    if(error) Serial.println("Failed to read file, using default config");
     
     file.close();
     SPIFFS.end();
 
-    delay(500);
     if(strcmp(filenome,file1) == 0)
     {
     strlcpy(dados.host,doc["hostname"]|"aqua",sizeof(dados.host)); //Grava dados de hostname,
     dados.pump     = doc["Pump"];      // estado da bomba (on ou Off),
     strlcpy(dados.led, doc["Led"]|"manual", sizeof(dados.led));   // estado do Led,
-    dados.corLed.r = doc["cor_r"];  ///intenciadade da cor vermelha no led,
-    dados.corLed.g = doc["cor_g"]; //intencidade da cor verde no led,
-    dados.corLed.b = doc["cor_b"]; //intencidade da cor azul no led,
-
-    }else if(strcmp(filenome, file2) == 0)
-    {
-    strlcpy(dados.led, doc["Led"]|"manual", sizeof(dados.led));   // estado do Led,
     dados.sun      = doc["sun"];
     dados.speed    = doc["delay"]|500; //atualiza velocidade de transição na cor dos leds
-    dados.corLed.r = doc["cor_r"];  ///intenciadade da cor vermelha no led,
-    dados.corLed.g = doc["cor_g"]; //intencidade da cor verde no led,
-    dados.corLed.b = doc["cor_b"]; //intencidade da cor azul no led,
+    dados.corLed.r = doc["cor_r"]|0;  ///intenciadade da cor vermelha no led,
+    dados.corLed.g = doc["cor_g"]|0; //intencidade da cor verde no led,
+    dados.corLed.b = doc["cor_b"]|0; //intencidade da cor azul no led,
 
-    }else if(strcmp(filenome,file3) == 0)
+    }else if(strcmp(filenome,file2) == 0)
     {
       copyArray(doc["pgr"],dados.programas); // Programações da bomba e 
       copyArray(doc["hr"], dados.horarios);   // horarios de ativação da bomba.
       dados.count    = doc["count"];  ///Quantidades de programas,
 
-
-    }else if(strcmp(filenome,file4) == 0)
+    }else if(strcmp(filenome,file3) == 0)
     {
       dados.ntpServ  = doc["ntpServer"]|"pool.ntp.org";
       dados.port     = doc["ntpPort"]|123;
@@ -812,19 +785,8 @@ void loadConfigurator(const char* filenome, Config &conf){
 
 
 //Salva dados de configuração do módulo
-void saveConfig(const char* filenome, Config &conf){
-  Config dados = conf;
-  if(SPIFFS.begin()){
-    if(SPIFFS.exists(filenome)){ // Verifica se arquivo existe
-      SPIFFS.remove(filenome);   // Exclui arquivo para reescrever
-    }
-    File file = SPIFFS.open(filenome,"w"); // Abre arquivo em modo de escrita
-    if(!file){
-      SPIFFS.end();
-      return;
-    }
-    
-    DynamicJsonDocument doc(2048); //cria JsonDocument para serializar dados
+void saveConfig(const char* filenome, Config &dados){
+  StaticJsonDocument<1024> doc; //cria JsonDocument para serializar dados
 
     if(strcmp(filenome,file1) == 0)
     {
@@ -834,23 +796,16 @@ void saveConfig(const char* filenome, Config &conf){
       doc["cor_r"]      = dados.corLed.r;
       doc["cor_g"]      = dados.corLed.g;
       doc["cor_b"]      = dados.corLed.b;
-
-    }else if(strcmp(filenome,file2) == 0)
-    {
-      doc["delay"]      = dados.speed;
-      doc["cor_r"]      = dados.corLed.r;
-      doc["cor_g"]      = dados.corLed.g;
-      doc["cor_b"]      = dados.corLed.b;
       doc["sun"]        = dados.sun;
-      doc["Led"]        = dados.led;
+      doc["delay"]      = dados.speed;
 
-    }else if(strcmp(filenome,file4) == 0)
+    }else if(strcmp(filenome,file3) == 0)
     {
       doc["ntpServer"]  = dados.ntpServ;
       doc["ntpPort"]    = dados.port;
       doc["ntpZone"]    = dados.zone;
 
-    }else if(strcmp(filenome,file3) == 0)
+    }else if(strcmp(filenome,file2) == 0)
     {
       copyArray(dados.programas, doc["pgr"]);
       copyArray(dados.horarios, doc["hr"]);
@@ -858,10 +813,17 @@ void saveConfig(const char* filenome, Config &conf){
     
     }
 
-    delay(500);
-    if(serializeJson(doc,file) == 0){
-      Serial.println("Error!");
+    if(SPIFFS.begin()){
+    if(SPIFFS.exists(filenome)){ // Verifica se arquivo existe
+      SPIFFS.remove(filenome);   // Exclui arquivo para reescrever
     }
+    File file = SPIFFS.open(filenome,"w"); // Abre arquivo em modo de escrita
+    if(!file){
+      SPIFFS.end();
+      return;
+    }
+
+    serializeJson(doc,file);
 
     file.close();
     SPIFFS.end();

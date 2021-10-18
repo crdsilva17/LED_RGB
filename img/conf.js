@@ -139,12 +139,12 @@ function save(){
 
   xh.onreadystatechange = function(){
     if(this.readyState == 4 && this.status == 200){
-      if(count > 1){
+      if(count >= 1){
         window.alert(count + " Programas Salvos!");
       }else if(count < 0){
         window.alert("Error ao Salvar o Programa!!!");
       }else{
-        window.alert(count + " Programa Salvo!")
+        window.alert("Nenhum Programa Salvo!")
       }
     }
   }
