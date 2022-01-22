@@ -467,11 +467,11 @@ void loop() {
   
   serverA.handleClient();
   MDNS.update();
-  delayMicroseconds(50);
+  //delayMicroseconds(50);
   if(ntp.update()){
     timeClock();
   }
-  delayMicroseconds(50);
+  //delayMicroseconds(50);
 
   ha = agora.substring(0, agora.indexOf(":")).toFloat();
   ma = agora.substring(agora.indexOf(":")+1,agora.indexOf(":",agora.indexOf(":")+1)).toFloat();
