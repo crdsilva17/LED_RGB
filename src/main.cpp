@@ -403,13 +403,15 @@ void setup() {
 
   analogWriteRange(255); // 8 bits resolution
   analogWriteFreq(5000); // 5khz frequency
-  
+
+ /* 
   serverA.on("/", [](){
     //handleRoot(); 
     if (!handleFileRead(serverA.uri()))                  // send it if it exists
     serverA.send(404, "text/plain", "404: Not Found"); // otherwise, respond with a 404 (Not Found) error
   });
-  
+  */
+
   serverA.on("/update",handleUpdate); 
 
   serverA.on("/pump", handleActionPump);
@@ -692,11 +694,12 @@ int strToByte(String str){
 }
 
 String getContentType(String filenome) { // convert the file extension to the MIME type
-  if (filenome.endsWith(".htm")) return "text/html";
-  else if (filenome.endsWith(".css")) return "text/css";
-  else if (filenome.endsWith(".js")) return "application/javascript";
-  else if (filenome.endsWith(".ico")) return "image/x-icon";
-  else if (filenome.endsWith(".json")) return "application/json";
+ // if (filenome.endsWith(".htm")) return "text/html";
+  //else if (filenome.endsWith(".css")) return "text/css";
+  //else if (filenome.endsWith(".js")) return "application/javascript";
+  //else if (filenome.endsWith(".ico")) return "image/x-icon";
+  //else 
+  if (filenome.endsWith(".json")) return "application/json";
   return "text/plain";
 }
 
