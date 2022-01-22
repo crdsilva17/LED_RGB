@@ -22,110 +22,26 @@ function init(){
         if (this.readyState == 4 && this.status == 200){
             // atualiza pagina aqui
             console.log(this.responseText);
-            dadosJson = JSON.parse(this.responseText); // Recebe dados de atualização da página
 
-            ntpServer.value = dadosJson.ntpServer;
-            port.value = dadosJson.ntpPort;
-            zone.value = dadosJson.ntpZone;
-        
-            for(var i=0; i<4; i++){
-            _ip[i] = dadosJson.ip[i];
-            _gw[i] = dadosJson.gw[i];
-            _sn[i] = dadosJson.sn[i];
+            try {
+              dadosJson = JSON.parse(this.responseText); // Recebe dados de atualização da página
+              ntpServer.value = dadosJson.ntpServer;
+              port.value = dadosJson.ntpPort;
+              zone.value = dadosJson.ntpZone;
+            } catch (error) {
+              console.log(error);
             }
-
-            if(dhc[0] != null){
-              dhc[1].checked = dadosJson.dhcp;
-              if(dhc[0].checked == true){
-                document.querySelector("#manualIP").style.display = "none";
-              }else{
-                document.querySelector("#manualIP").style.display = "block";
-                let str1 = _ip[0];
-                let str2 = _gw[0];
-                let str3 = _sn[0];
-                str1 += '.' + _ip[1];
-                str2 += '.' + _gw[1];
-                str3 += '.' + _sn[1];
-                str1 += '.' + _ip[2];
-                str2 += '.' + _gw[2];
-                str3 += '.' + _sn[2];
-                str1 += '.' + _ip[3];
-                str2 += '.' + _gw[3];
-                str3 += '.' + _sn[3];
-                
-                document.querySelector("#eIP").value = str1;
-                document.querySelector("#SR").value =  str3;
-                document.querySelector("#GT").value =  str2;              
-              }
-            }
+           
+            update();
 
         }
     }
-
-    if(dhc != null){
-      for(var i = 0; i< dhc.length; i++){
-        dhc[i].addEventListener("change",function(){meuip()}, false);
-      }
-    }
-
-};
-
-function saveDhcp(){
-  var xh = new XMLHttpRequest();
-  var json;
-  var dhc = document.querySelectorAll('input[name="dhcp"');
-  xh.onreadystatechange = function(){
-    if (this.readyState == 4 && this.status == 200){
-      window.alert("CONFIGURAÇÃO SALVA!");
-    }
-  };
-  xh.open("POST", "meuIp", true);
-  formdata = new FormData();
-  if(dhc[1].checked == 1){
-    _ip = document.querySelector("#eIP").value.split(".");
-    _sn = document.querySelector("#SR").value.split(".");
-    _gw = document.querySelector("#GT").value.split(".");
-  }else{
-    _ip = [0,0,0,0];
-    _gw = [0,0,0,0];
-    _sn = [0,0,0,0];
-  }
-  json = '{"ip":['+_ip[0]+','+_ip[1]+','+_ip[2]+','+_ip[3]+'],"gw":[';
-  json += _gw[0]+','+_gw[1]+','+_gw[2]+','+_gw[3]+'],"sn":[';
-  json += _sn[0]+','+_sn[1]+','+_sn[2]+','+_sn[3]+'],"dhcp":'+dhc[1].checked+'}';
-  formdata.append("meuip",json);
-  xh.send(formdata);
 };
 
 function cancelDhcp(){
   window.location.replace("/set.htm");
 };
 
-
-function meuip(){
-  var dhc = document.querySelectorAll('input[name="dhcp"]');
-  if(dhc[1].checked == 1){
-    document.querySelector("#manualIP").style.display = "block";
-    let str1 = _ip[0];
-    let str2 = _gw[0];
-    let str3 = _sn[0];
-    str1 += '.' + _ip[1];
-    str2 += '.' + _gw[1];
-    str3 += '.' + _sn[1];
-    str1 += '.' + _ip[2];
-    str2 += '.' + _gw[2];
-    str3 += '.' + _sn[2];
-    str1 += '.' + _ip[3];
-    str2 += '.' + _gw[3];
-    str3 += '.' + _sn[3];
-    
-    document.querySelector("#eIP").value = str1;
-    document.querySelector("#SR").value =  str3;
-    document.querySelector("#GT").value =  str2; 
-  }else{
-    document.querySelector("#manualIP").style.display = "none";
-  }
-};
 
 //// Função que habilita menu superior
 function myFunction() {
@@ -141,6 +57,15 @@ function myFunction() {
   function reset(){
     var xh = new XMLHttpRequest();
     var formdata = new FormData();
+    xh.onreadystatechange = function(){
+      if(this.readyState==4 && this.status==200){
+        var body = document.body;
+        var h1 = document.createElement("h1");
+        var texto = document.createTextNode("Reiniciando o dispositivo....");
+        h1.appendChild(texto);
+        body.appendChild(h1);
+      }
+    }
     xh.open("POST", "reset", true );
     formdata.append("reset", "again");
     xh.send(formdata);    

@@ -19,8 +19,12 @@ function init(){
         if (this.readyState == 4 && this.status == 200){
             // atualiza pagina aqui
             console.log(this.responseText);
+            try {
             dadosJson = JSON.parse(this.responseText); // Recebe dados de atualização da página
             stsLed = dadosJson.Led; // Verifica estado do Painel de Led
+            } catch (error) {
+              console.log(error);
+            }
             
             if(stsLed.includes("sequencia")){
                 radio[0].checked = true;
