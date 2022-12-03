@@ -9,7 +9,7 @@
  *          - Turn on Led
  *          - OnOff Pump
  * @bug Bugs list
- * @copyright Smart Home System Automação all copyrights reserved
+ * @copyright Cristiano da Rocha Silva all copyrights reserved
  * 
  * */
 
@@ -22,7 +22,8 @@
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
-#include <FS.h>
+//#include <FS.h>
+#include <LittleFS.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266HTTPUpdateServer.h>
 #include <WiFiUdp.h>
@@ -60,7 +61,7 @@ int btnPump                   = 4; /// define ldr sensor
 int prog                      = 0;  //Define program run
 String page                   = ""; /*!< Store page HTML */
 String agora                  = "00:00"; /*!< Store ntp time */
-short seg                     = 0;
+//short seg                     = 0;
 int hoje                      = 0; /*!< Store day of week */
 
 /******************************************************************
@@ -349,9 +350,13 @@ void handleReset();
  * 
  *        put all configuration setup of device
  * */
+
+
+
+
 void setup() {
   
-  //Serial.begin(9600);
+  Serial.begin(9600);
 
   delay(3000);
   loadConfigurator(file1, config);
@@ -403,13 +408,15 @@ void setup() {
 
   analogWriteRange(255); // 8 bits resolution
   analogWriteFreq(5000); // 5khz frequency
-  
+
+ /* 
   serverA.on("/", [](){
     //handleRoot(); 
     if (!handleFileRead(serverA.uri()))                  // send it if it exists
     serverA.send(404, "text/plain", "404: Not Found"); // otherwise, respond with a 404 (Not Found) error
   });
-  
+  */
+
   serverA.on("/update",handleUpdate); 
 
   serverA.on("/pump", handleActionPump);
@@ -450,13 +457,13 @@ void setup() {
   });
 
   WiFi.mode(WIFI_STA);
-  delay(1000);
+  //delay(1000);
   MDNS.begin(config.host);
   httpUpdater.setup(&serverA, update_path, config.user, config.pass);
   serverA.begin();
   MDNS.addService("http", "tcp", 80);
   ntp.begin();
-  delay(1000);
+  //delay(1000);
 }
 
 
@@ -656,7 +663,7 @@ void handleReset(){
       ESP.eraseConfig();
       delay(3000);
 
-      if(SPIFFS.remove(file1) && SPIFFS.remove(file2) && SPIFFS.remove(file3)) 
+      if(LittleFS.remove(file1) && LittleFS.remove(file2) && LittleFS.remove(file3)) 
       Serial.println("Arquivos Deletados");
 
       delay(3000);
@@ -668,7 +675,7 @@ void handleReset(){
 
 ///Converte String para Caracter
 void strTochar(String str, char * carc){
-  for(int i = 0; i < str.length(); i++){
+  for(unsigned int i = 0; i < str.length(); i++){
     carc[i] = str[i];
   }
 }
@@ -692,11 +699,12 @@ int strToByte(String str){
 }
 
 String getContentType(String filenome) { // convert the file extension to the MIME type
-  if (filenome.endsWith(".htm")) return "text/html";
-  else if (filenome.endsWith(".css")) return "text/css";
-  else if (filenome.endsWith(".js")) return "application/javascript";
-  else if (filenome.endsWith(".ico")) return "image/x-icon";
-  else if (filenome.endsWith(".json")) return "application/json";
+ // if (filenome.endsWith(".htm")) return "text/html";
+  //else if (filenome.endsWith(".css")) return "text/css";
+  //else if (filenome.endsWith(".js")) return "application/javascript";
+  //else if (filenome.endsWith(".ico")) return "image/x-icon";
+  //else 
+  if (filenome.endsWith(".json")) return "application/json";
   return "text/plain";
 }
 
@@ -717,23 +725,23 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
   }
 
   String contentType = getContentType(path);            // Get the MIME type
-  if(SPIFFS.begin()){
-  if (SPIFFS.exists(path)) {                            // If the file exists
-    File file = SPIFFS.open(path, "r");                 // Open it
-    delay(500);
+  if(LittleFS.begin()){
+  if (LittleFS.exists(path)) {                            // If the file exists
+    File file = LittleFS.open(path, "r");                 // Open it
+    //delay(500);
     size_t sent = serverA.streamFile(file, contentType); // And send it to the client
     file.close(); 
-    SPIFFS.end();                                      // Then close the file again
+    LittleFS.end();                                      // Then close the file again
     return true;
   }else{
     path += ".gz";
-    File file   = SPIFFS.open(path, "r");                 // Open it
+    File file   = LittleFS.open(path, "r");                 // Open it
     size_t sent = serverA.streamFile(file, contentType); // And send it to the client
     file.close(); 
-    SPIFFS.end();                                      // Then close the file again
+    LittleFS.end();                                      // Then close the file again
     return true;
   }
-  SPIFFS.end();
+  LittleFS.end();
   }
   return false;                                         // If the file doesn't exist, return false
 }
@@ -742,17 +750,17 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
 void loadConfigurator(const char* filenome, Config &dados){
   StaticJsonDocument<1024> doc;
   
-  if(SPIFFS.begin()){ ///inicializa sistema de arquivos
+  if(LittleFS.begin()){ ///inicializa sistema de arquivos
     File file;
-    if(SPIFFS.exists(filenome)){ // Verifica existencia de arquivo
-      file = SPIFFS.open(filenome, "r");  //Existindo abre em modo de leitura
+    if(LittleFS.exists(filenome)){ // Verifica existencia de arquivo
+      file = LittleFS.open(filenome, "r");  //Existindo abre em modo de leitura
     }else{
-      file = SPIFFS.open(filenome,"w"); /// caso contrário cria arquivo para escrita de valores.
+      file = LittleFS.open(filenome,"w"); /// caso contrário cria arquivo para escrita de valores.
     }
     DeserializationError error = deserializeJson(doc,file); // formata em modelo Json
     
     file.close();
-    SPIFFS.end();
+    LittleFS.end();
 
     if(strcmp(filenome,file1) == 0)
     {
@@ -813,20 +821,20 @@ void saveConfig(const char* filenome, Config &dados){
     
     }
 
-    if(SPIFFS.begin()){
-    if(SPIFFS.exists(filenome)){ // Verifica se arquivo existe
-      SPIFFS.remove(filenome);   // Exclui arquivo para reescrever
+    if(LittleFS.begin()){
+    if(LittleFS.exists(filenome)){ // Verifica se arquivo existe
+      LittleFS.remove(filenome);   // Exclui arquivo para reescrever
     }
-    File file = SPIFFS.open(filenome,"w"); // Abre arquivo em modo de escrita
+    File file = LittleFS.open(filenome,"w"); // Abre arquivo em modo de escrita
     if(!file){
-      SPIFFS.end();
+      LittleFS.end();
       return;
     }
 
     serializeJson(doc,file);
 
     file.close();
-    SPIFFS.end();
+    LittleFS.end();
   }
 }
 
